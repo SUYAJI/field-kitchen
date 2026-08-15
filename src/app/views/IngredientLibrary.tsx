@@ -33,8 +33,8 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
   }, [filteredIngredients, selectedIngredient]);
 
   return (
-    <div className="w-full h-full flex overflow-hidden relative">
-      <div className={`flex-1 transition-all duration-700 ease-[0.16,1,0.3,1] ${selectedIngredient ? 'md:pr-[440px]' : ''} overflow-y-auto p-6 md:p-10`}>
+    <div className="w-full min-h-0 flex overflow-visible relative lg:h-full lg:overflow-hidden">
+      <div className={`flex-1 transition-all duration-700 ease-[0.16,1,0.3,1] ${selectedIngredient ? 'lg:pr-[440px]' : ''} overflow-visible p-5 sm:p-6 lg:overflow-y-auto lg:p-10`}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pb-20">
           <AnimatePresence>
             {filteredIngredients.map((ingredient, idx) => {
@@ -49,7 +49,7 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                   whileHover="hover"
                   whileTap={{ scale: 0.97 }}
                   onClick={() => setSelectedIngredient(ingredient)}
-                  className={`group relative h-[340px] bg-white/40 backdrop-blur-md border border-black/5 rounded-2xl flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 ${selectedIngredient?.id === ingredient.id ? 'ring-2 ring-black/20 shadow-2xl' : ''}`}
+                  className={`group relative h-[300px] sm:h-[340px] bg-white/40 backdrop-blur-md border border-black/5 rounded-2xl flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 ${selectedIngredient?.id === ingredient.id ? 'ring-2 ring-black/20 shadow-2xl' : ''}`}
                 >
                   {/* Hover BG */}
                   <div 
@@ -134,7 +134,7 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0 }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute top-0 right-0 h-full w-full max-w-[440px] bg-[#faf9f6]/90 backdrop-blur-2xl border-l border-black/10 flex flex-col shadow-2xl overflow-y-auto z-50"
+            className="fixed inset-0 h-dvh w-full bg-[#faf9f6]/95 backdrop-blur-2xl flex flex-col shadow-2xl overflow-y-auto z-[100] lg:absolute lg:inset-auto lg:top-0 lg:right-0 lg:h-full lg:max-w-[440px] lg:border-l lg:border-black/10"
           >
             {/* Hero Image */}
             <div className="relative h-48 shrink-0 overflow-hidden">
@@ -148,8 +148,8 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
               </button>
             </div>
 
-            <div className="px-8 pb-8 -mt-8 relative z-10 flex flex-col flex-1">
-              <h2 className="font-['Playfair_Display'] text-5xl tracking-[-0.02em] font-semibold mb-1 text-[#1a1a1a]">
+            <div className="px-5 sm:px-8 pb-8 -mt-8 relative z-10 flex flex-col flex-1">
+              <h2 className="font-['Playfair_Display'] text-4xl sm:text-5xl tracking-[-0.02em] font-semibold mb-1 text-[#1a1a1a]">
                 {selectedIngredient.name}
               </h2>
               <p className="text-[10px] tracking-widest uppercase text-black/50 font-semibold mb-8">

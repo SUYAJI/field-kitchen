@@ -102,8 +102,8 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
   const scrollTop = scrollRef.current?.scrollTop || 0;
 
   return (
-    <div className="w-full h-full flex flex-col p-6 md:p-10 relative overflow-hidden">
-      <header className="mb-6 relative z-20 pointer-events-none shrink-0">
+    <div className="w-full min-h-0 flex flex-col p-5 sm:p-6 lg:p-10 relative overflow-visible lg:h-full lg:overflow-hidden">
+      <header className="mb-5 lg:mb-6 relative z-20 pointer-events-none shrink-0">
         <Motion.h2 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -117,7 +117,7 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
       </header>
 
       {/* Technique Filters */}
-      <div className="relative z-20 flex flex-wrap gap-2 mb-6 border-b border-black/10 pb-5 shrink-0">
+      <div className="relative z-20 flex flex-wrap gap-2 mb-5 lg:mb-6 border-b border-black/10 pb-4 lg:pb-5 shrink-0">
         <span className="text-[10px] uppercase font-semibold tracking-widest text-black/30 w-full mb-2">Technique Reshaping Filters</span>
         {PREP_METHODS.map((method) => {
           const isActive = activeFilters.includes(method.id);
@@ -169,7 +169,7 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
       </AnimatePresence>
 
       {/* Field Visualization */}
-      <main ref={containerRef} className="flex-1 relative z-10 w-full overflow-hidden">
+      <main ref={containerRef} className="relative z-10 w-full overflow-visible lg:flex-1 lg:min-h-0 lg:overflow-hidden">
         {/* Background glow */}
         <AnimatePresence>
           {selectedIngredient && (
@@ -219,7 +219,7 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
 
         <div
           ref={scrollRef}
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 w-full h-full max-h-full overflow-y-auto pb-20 content-start relative z-10"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 w-full h-auto overflow-visible pb-12 lg:h-full lg:max-h-full lg:overflow-y-auto lg:pb-20 content-start relative z-10"
         >
           {filteredIngredients.map((ingredient, i) => {
             const isSelected = selectedIngredient?.id === ingredient.id;

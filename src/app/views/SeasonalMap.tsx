@@ -37,8 +37,8 @@ export function SeasonalMap({ activeRegion }: { activeRegion: Region | "All" }) 
   }, [filteredIngredients, hoveredIngredient, selectedDetail]);
 
   return (
-    <div className="w-full h-full flex flex-col p-6 md:p-10 relative overflow-hidden">
-      <header className="mb-8 flex flex-col md:flex-row md:justify-between md:items-end gap-6 shrink-0">
+    <div className="w-full min-h-0 flex flex-col p-5 sm:p-6 lg:p-10 relative overflow-visible lg:h-full lg:overflow-hidden">
+      <header className="mb-6 lg:mb-8 flex flex-col lg:flex-row lg:justify-between lg:items-end gap-5 lg:gap-6 shrink-0">
         <div className="flex flex-col gap-2">
           <Motion.h2 
             initial={{ opacity: 0, y: -10 }}
@@ -71,7 +71,7 @@ export function SeasonalMap({ activeRegion }: { activeRegion: Region | "All" }) 
         </div>
       </header>
 
-      <main className="flex-1 overflow-x-auto overflow-y-auto relative">
+      <main className="w-full overflow-x-auto overflow-y-visible relative pb-4 overscroll-x-contain lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:pb-0">
         <div className="min-w-[800px] w-full relative">
           {/* Months Header */}
           <div className="grid grid-cols-[200px_repeat(12,minmax(0,1fr))] gap-2 mb-4 text-[10px] uppercase tracking-widest font-semibold text-black/30 border-b border-black/10 pb-4 sticky top-0 bg-[#faf9f6]/80 backdrop-blur-md z-20">
@@ -149,7 +149,7 @@ export function SeasonalMap({ activeRegion }: { activeRegion: Region | "All" }) 
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute bottom-6 left-6 right-6 md:left-auto md:right-10 md:bottom-10 md:w-[400px] bg-white/90 backdrop-blur-2xl border border-black/10 rounded-2xl p-6 shadow-2xl z-50"
+            className="fixed bottom-4 left-4 right-4 max-h-[calc(100dvh-2rem)] overflow-y-auto bg-white/90 backdrop-blur-2xl border border-black/10 rounded-2xl p-5 shadow-2xl z-[100] md:absolute md:left-auto md:right-10 md:bottom-10 md:w-[400px] md:max-h-none md:overflow-visible md:p-6 md:z-50"
           >
             <div className="flex justify-between items-start mb-4">
               <div>

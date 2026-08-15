@@ -63,8 +63,8 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
   };
 
   return (
-    <div className="w-full h-full flex flex-col p-6 md:p-10 relative overflow-hidden">
-      <header className="mb-8 relative z-20 shrink-0">
+    <div className="w-full min-h-0 flex flex-col p-5 sm:p-6 lg:p-10 relative overflow-visible lg:h-full lg:overflow-x-hidden lg:overflow-y-auto">
+      <header className="mb-6 lg:mb-8 relative z-20 shrink-0">
         <Motion.h2 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -78,7 +78,7 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
       </header>
 
       {/* Legend */}
-      <div className="relative z-20 flex gap-6 mb-6 text-[10px] uppercase tracking-widest font-semibold text-black/30 shrink-0">
+      <div className="relative z-20 flex flex-wrap gap-4 sm:gap-6 mb-5 lg:mb-6 text-[10px] uppercase tracking-widest font-semibold text-black/30 shrink-0">
         {activeLayers.map((layer) => (
           <div key={layer} className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: LAYER_CONFIG[layer].color }} />
@@ -87,8 +87,8 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
         ))}
       </div>
 
-      <main className="relative flex-1 w-full flex items-center justify-center p-4">
-        <div className="relative w-full max-w-[700px] aspect-square">
+      <main className="relative flex-none min-h-[340px] sm:min-h-[460px] lg:min-h-[280px] min-[1360px]:min-h-[440px] w-full flex items-center justify-center p-2 sm:p-4">
+        <div className="relative w-full max-w-[700px] aspect-square lg:w-[280px] min-[1360px]:w-[440px]">
           
           {/* Concentric rings */}
           {activeLayers.map((layer) => (

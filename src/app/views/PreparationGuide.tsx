@@ -36,8 +36,8 @@ export function PreparationGuide({ activeRegion }: { activeRegion: Region | "All
   }, [filteredIngredients, activeMethod]);
 
   return (
-    <div className="w-full h-full flex flex-col p-6 md:p-10 relative overflow-hidden">
-      <header className="mb-6 relative z-20 shrink-0 flex flex-col md:flex-row md:justify-between md:items-end gap-4">
+    <div className="w-full min-h-0 flex flex-col p-5 sm:p-6 lg:p-10 relative overflow-visible lg:h-full lg:overflow-hidden">
+      <header className="mb-6 relative z-20 shrink-0 flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4">
         <div>
           <Motion.h2 
             initial={{ opacity: 0, y: -10 }}
@@ -73,10 +73,10 @@ export function PreparationGuide({ activeRegion }: { activeRegion: Region | "All
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col md:flex-row gap-8 mt-2 z-10 relative min-h-0"
+            className="flex-none flex flex-col lg:flex-row gap-8 mt-2 z-10 relative min-h-0 lg:flex-1"
           >
             {/* Techniques List */}
-            <div className="w-full md:w-1/3 flex flex-col gap-3 md:border-r border-black/10 md:pr-6 overflow-y-auto pb-8 shrink-0">
+            <div className="w-full lg:w-1/3 flex flex-col gap-3 lg:border-r border-black/10 lg:pr-6 overflow-visible pb-8 shrink-0 lg:overflow-y-auto">
               <div className="text-[10px] uppercase font-semibold tracking-widest text-black/30 mb-2">Technique Index</div>
               {PREP_METHODS.map((method) => {
                 const Icon = method.icon;
@@ -102,7 +102,7 @@ export function PreparationGuide({ activeRegion }: { activeRegion: Region | "All
             </div>
 
             {/* Compatible Ingredients */}
-            <div className="w-full md:w-2/3 relative flex flex-col overflow-y-auto pb-12">
+            <div className="w-full lg:w-2/3 relative flex flex-col overflow-visible pb-12 lg:overflow-y-auto">
               <div className="text-[10px] uppercase font-semibold tracking-widest text-black/30 mb-6">Compatible Ingredients</div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative">
@@ -168,10 +168,10 @@ export function PreparationGuide({ activeRegion }: { activeRegion: Region | "All
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex-1 overflow-auto z-10 relative pb-12"
+            className="flex-none overflow-x-auto overflow-y-visible z-10 relative pb-12 overscroll-x-contain lg:flex-1 lg:overflow-auto"
           >
             <div className="text-[10px] uppercase font-semibold tracking-widest text-black/30 mb-4">Compatibility Matrix</div>
-            <div className="min-w-[700px] overflow-x-auto">
+            <div className="min-w-[700px]">
               <table className="w-full border-collapse">
                 <thead>
                   <tr>

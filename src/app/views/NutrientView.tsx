@@ -54,8 +54,8 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
   };
 
   return (
-    <div className="w-full h-full flex flex-col p-6 md:p-10 relative overflow-hidden">
-      <header className="mb-6 relative z-20 shrink-0">
+    <div className="w-full min-h-0 flex flex-col p-5 sm:p-6 lg:p-10 relative overflow-visible lg:h-full lg:overflow-x-hidden lg:overflow-y-auto">
+      <header className="mb-5 lg:mb-6 relative z-20 shrink-0">
         <Motion.h2 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -69,7 +69,7 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
       </header>
 
       {/* Metric Switcher */}
-      <div className="relative z-20 flex flex-wrap gap-2 mb-6 shrink-0">
+      <div className="relative z-20 flex flex-wrap gap-2 mb-5 lg:mb-6 shrink-0">
         {METRICS.map((metric) => (
           <button
             key={metric.key}
@@ -113,8 +113,8 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
       </div>
 
       {/* Ingredient Nodes */}
-      <div className="relative flex-1 z-10 flex items-center justify-center">
-        <div className="relative w-full max-w-[700px] aspect-square">
+      <div className="relative flex-none min-h-[400px] sm:min-h-[520px] lg:min-h-[280px] min-[1360px]:min-h-[440px] z-10 flex items-center justify-center">
+        <div className="relative w-[calc(100%-2rem)] sm:w-full max-w-[700px] aspect-square lg:w-[280px] min-[1360px]:w-[440px]">
           {sortedIngredients.map((ingredient, i) => {
             const pos = getPosition(ingredient, i, sortedIngredients.length);
             const value = ingredient.nutrients[activeMetric];

@@ -35,7 +35,7 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
   const [datasetOpen, setDatasetOpen] = useState(false);
 
   return (
-    <div className="relative w-full h-full flex flex-col justify-center items-center overflow-hidden p-6 md:p-12 text-[#0d2110] selection:bg-[#e76f51]/30">
+    <div className="relative w-full min-h-dvh flex flex-col justify-start lg:justify-center items-center overflow-x-hidden p-6 md:p-12 text-[#0d2110] selection:bg-[#e76f51]/30 lg:h-full lg:overflow-y-auto">
       {/* Background */}
       <div className="absolute inset-0 pointer-events-none opacity-80 mix-blend-multiply overflow-hidden z-0">
         <div 
@@ -59,10 +59,10 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
         />
       </div>
 
-      <main className="relative z-10 w-full max-w-[1400px] flex flex-col md:flex-row justify-between items-start md:items-end gap-16 md:gap-8 h-full py-12 md:py-24">
+      <main className="relative z-10 w-full max-w-[1400px] flex flex-col lg:flex-row justify-between items-start lg:items-end gap-12 lg:gap-8 h-auto py-8 md:py-12 lg:h-full lg:py-24">
         
         {/* Left Column */}
-        <div className="flex flex-col h-full justify-between max-w-2xl w-full">
+        <div className="flex flex-col h-auto lg:h-full justify-between max-w-2xl w-full">
           <header>
             <Motion.div 
               initial={{ opacity: 0, y: 20 }}
@@ -87,7 +87,7 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1, delay: 0.8 }}
-            className="mt-12 md:mt-24 max-w-md"
+            className="mt-12 lg:mt-24 max-w-md"
           >
             <p className="font-['Space_Grotesk'] text-sm md:text-base leading-relaxed text-black/60 mb-4">
               FIELD KITCHEN is a spatial ingredient intelligence interface designed to help cooks and researchers explore seasonal availability, regional sourcing relationships, and preparation compatibility across Pacific Northwest food systems.
@@ -121,7 +121,7 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 1.2, delay: 0.5, ease: "easeOut" }}
-          className="flex flex-col gap-12 md:pb-12 text-right md:text-left self-end md:self-stretch justify-end"
+          className="flex flex-col gap-10 lg:gap-12 lg:pb-12 text-right lg:text-left self-end lg:self-stretch justify-end"
         >
           <div className="space-y-2">
             <div className="text-[10px] uppercase tracking-[0.2em] font-semibold text-black/40">Region Index</div>
@@ -183,7 +183,7 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               className="fixed top-0 right-0 h-full w-full max-w-[520px] bg-[#faf9f6]/95 backdrop-blur-2xl border-l border-black/10 z-[201] flex flex-col shadow-2xl"
             >
-              <div className="flex items-center justify-between p-8 border-b border-black/10">
+              <div className="flex items-center justify-between p-5 sm:p-8 border-b border-black/10">
                 <div>
                   <h3 className="font-['Playfair_Display'] text-2xl font-semibold tracking-tight">Dataset Index</h3>
                   <span className="text-[10px] uppercase tracking-widest font-semibold text-black/40">Pacific Northwest Field Index</span>
@@ -193,7 +193,7 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-8">
+              <div className="flex-1 overflow-y-auto p-5 sm:p-8">
                 {/* Summary Stats */}
                 <div className="grid grid-cols-3 gap-4 mb-10">
                   {[
