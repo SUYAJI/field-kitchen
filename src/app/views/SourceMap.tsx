@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { motion as Motion, AnimatePresence } from "motion/react";
+import { motion as Motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { INGREDIENTS, Region, SourceLayer, Ingredient, SUPPORTED_SOURCE_LAYERS } from "../data";
 
 const LAYER_CONFIG: Record<SourceLayer, { radius: number; jitterScale: number; inset: number; labelTop: number; color: string }> = {
@@ -20,7 +20,10 @@ const HABITAT_MAP: Record<string, string> = {
 };
 
 export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
+  const shouldReduceMotion = useReducedMotion();
   const [hoveredIngredient, setHoveredIngredient] = useState<Ingredient | null>(null);
+  const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
+  const activeIngredient = hoveredIngredient ?? selectedIngredient;
 
   const filteredIngredients = useMemo(() => {
     return INGREDIENTS.filter(
@@ -45,7 +48,10 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
     if (hoveredIngredient && !filteredIngredients.some((ingredient) => ingredient.id === hoveredIngredient.id)) {
       setHoveredIngredient(null);
     }
-  }, [filteredIngredients, hoveredIngredient]);
+    if (selectedIngredient && !filteredIngredients.some((ingredient) => ingredient.id === selectedIngredient.id)) {
+      setSelectedIngredient(null);
+    }
+  }, [filteredIngredients, hoveredIngredient, selectedIngredient]);
 
   // Stable positions based on ingredient id
   const getPosition = (ingredient: Ingredient, layer: SourceLayer, index: number, total: number) => {
@@ -63,9 +69,10 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
   };
 
   return (
-    <div className="w-full min-h-0 flex flex-col p-5 sm:p-6 lg:p-10 relative overflow-visible lg:h-full lg:overflow-x-hidden lg:overflow-y-auto">
+    <section aria-labelledby="source-map-heading" className="w-full min-h-0 flex flex-col p-5 sm:p-6 lg:p-10 relative overflow-visible lg:h-full lg:overflow-x-hidden lg:overflow-y-auto">
       <header className="mb-6 lg:mb-8 relative z-20 shrink-0">
         <Motion.h2 
+          id="source-map-heading"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="font-['Playfair_Display'] text-4xl md:text-6xl font-semibold tracking-[-0.02em] text-[#1a1a1a]"
@@ -78,7 +85,7 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
       </header>
 
       {/* Legend */}
-      <div className="relative z-20 flex flex-wrap gap-4 sm:gap-6 mb-5 lg:mb-6 text-[10px] uppercase tracking-widest font-semibold text-black/30 shrink-0">
+      <div className="relative z-20 flex flex-wrap gap-4 sm:gap-6 mb-5 lg:mb-6 text-[10px] uppercase tracking-widest font-semibold text-black/45 shrink-0">
         {activeLayers.map((layer) => (
           <div key={layer} className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: LAYER_CONFIG[layer].color }} />
@@ -87,7 +94,7 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
         ))}
       </div>
 
-      <main className="relative flex-none min-h-[340px] sm:min-h-[460px] lg:min-h-[280px] min-[1360px]:min-h-[440px] w-full flex items-center justify-center p-2 sm:p-4">
+      <div className="relative flex-none min-h-[340px] sm:min-h-[460px] lg:min-h-[280px] min-[1360px]:min-h-[440px] w-full flex items-center justify-center p-2 sm:p-4">
         <div className="relative w-full max-w-[700px] aspect-square lg:w-[280px] min-[1360px]:w-[440px]">
           
           {/* Concentric rings */}
@@ -103,7 +110,7 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
           {activeLayers.map((layer) => (
             <div
               key={`label-${layer}`}
-              className={`absolute left-1/2 -translate-x-1/2 text-[9px] uppercase font-semibold tracking-[0.2em] ${layer === 'Wild Foraged' ? 'text-[#606c38]/30 border border-[#606c38]/10 px-3 py-0.5 rounded-full bg-[#606c38]/[0.03]' : 'text-black/15'}`}
+              className={`absolute left-1/2 -translate-x-1/2 text-[10px] uppercase font-semibold tracking-[0.2em] ${layer === 'Wild Foraged' ? 'text-[#606c38]/60 border border-[#606c38]/20 px-3 py-0.5 rounded-full bg-[#606c38]/[0.03]' : 'text-black/50'}`}
               style={{ top: `${LAYER_CONFIG[layer].labelTop}%` }}
             >
               {layer}
@@ -115,10 +122,11 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
             const items = ingredientsByLayer[layer] ?? [];
             return items.map((ingredient, i) => {
               const pos = getPosition(ingredient, layer, i, items.length);
-              const isHovered = hoveredIngredient?.id === ingredient.id;
+              const isActive = activeIngredient?.id === ingredient.id;
               
               return (
-                <Motion.div
+                <Motion.button
+                  type="button"
                   key={ingredient.id}
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ 
@@ -134,27 +142,32 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
                   }}
                   onMouseEnter={() => setHoveredIngredient(ingredient)}
                   onMouseLeave={() => setHoveredIngredient(null)}
-                  className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group flex flex-col items-center gap-1.5 z-10"
+                  onFocus={() => setHoveredIngredient(ingredient)}
+                  onBlur={() => setHoveredIngredient(null)}
+                  onClick={() => setSelectedIngredient(selectedIngredient?.id === ingredient.id ? null : ingredient)}
+                  aria-pressed={selectedIngredient?.id === ingredient.id}
+                  aria-label={`${ingredient.name}. ${ingredient.sourceLayer} source from ${ingredient.originTag}, ${ingredient.region.join(', ')}. Select for habitat details.`}
+                  className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group flex flex-col items-center justify-center gap-1.5 z-10 min-w-11 min-h-11 bg-transparent border-0 p-0"
                 >
                   <Motion.div
-                    animate={{ y: [0, -4, 4, 0] }}
-                    transition={{ duration: 4 + (i % 3), repeat: Infinity, ease: "easeInOut" }}
+                    animate={shouldReduceMotion ? undefined : { y: [0, -4, 4, 0] }}
+                    transition={shouldReduceMotion ? undefined : { duration: 4 + (i % 3), repeat: Infinity, ease: "easeInOut" }}
                     className="flex flex-col items-center gap-1.5"
                   >
                     <Motion.div 
-                      animate={{ scale: isHovered ? 1.8 : 1 }}
+                      animate={{ scale: isActive ? 1.8 : 1 }}
                       transition={{ duration: 0.3 }}
                       className="w-3.5 h-3.5 md:w-5 md:h-5 rounded-full shadow-lg border-2 border-white/60"
                       style={{ backgroundColor: ingredient.color }}
                     />
-                    <span className={`font-['Space_Grotesk'] text-[9px] md:text-[10px] tracking-widest uppercase font-semibold whitespace-nowrap bg-white/70 backdrop-blur-sm px-2 py-0.5 rounded-sm transition-all duration-300 ${isHovered ? 'text-black bg-white shadow-md' : 'text-black/50'}`}>
+                    <span className={`font-['Space_Grotesk'] text-[10px] tracking-widest uppercase font-semibold whitespace-nowrap bg-white/70 backdrop-blur-sm px-2 py-0.5 rounded-sm transition-all duration-300 ${isActive ? 'text-black bg-white shadow-md' : 'text-black/65'}`}>
                       {ingredient.name}
                     </span>
                   </Motion.div>
 
                   {/* Habitat Context Tooltip */}
                   <AnimatePresence>
-                    {isHovered && (
+                    {isActive && (
                       <Motion.div
                         initial={{ opacity: 0, y: 5, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -172,12 +185,12 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
                       </Motion.div>
                     )}
                   </AnimatePresence>
-                </Motion.div>
+                </Motion.button>
               );
             });
           })}
         </div>
-      </main>
-    </div>
+      </div>
+    </section>
   );
 }

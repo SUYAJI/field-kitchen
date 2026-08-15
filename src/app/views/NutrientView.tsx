@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { motion as Motion, AnimatePresence } from "motion/react";
+import { motion as Motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { INGREDIENTS, Region, Ingredient, NUTRIENT_METRICS, NutrientKey, PROTOTYPE_INDEX_RANGES } from "../data";
 
 const METRIC_COLORS: Record<NutrientKey, string> = {
@@ -15,8 +15,11 @@ const METRICS = NUTRIENT_METRICS.map((metric) => ({
 }));
 
 export function NutrientView({ activeRegion }: { activeRegion: Region | "All" }) {
+  const shouldReduceMotion = useReducedMotion();
   const [activeMetric, setActiveMetric] = useState<NutrientKey>('protein');
   const [hoveredNode, setHoveredNode] = useState<Ingredient | null>(null);
+  const [selectedNode, setSelectedNode] = useState<Ingredient | null>(null);
+  const activeNode = hoveredNode ?? selectedNode;
 
   const filteredIngredients = useMemo(() => {
     return INGREDIENTS.filter(
@@ -28,7 +31,10 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
     if (hoveredNode && !filteredIngredients.some((ingredient) => ingredient.id === hoveredNode.id)) {
       setHoveredNode(null);
     }
-  }, [filteredIngredients, hoveredNode]);
+    if (selectedNode && !filteredIngredients.some((ingredient) => ingredient.id === selectedNode.id)) {
+      setSelectedNode(null);
+    }
+  }, [filteredIngredients, hoveredNode, selectedNode]);
 
   const currentMetricConfig = METRICS.find(m => m.key === activeMetric)!;
 
@@ -54,9 +60,10 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
   };
 
   return (
-    <div className="w-full min-h-0 flex flex-col p-5 sm:p-6 lg:p-10 relative overflow-visible lg:h-full lg:overflow-x-hidden lg:overflow-y-auto">
+    <section aria-labelledby="nutrient-view-heading" className="w-full min-h-0 flex flex-col p-5 sm:p-6 lg:p-10 relative overflow-visible lg:h-full lg:overflow-x-hidden lg:overflow-y-auto">
       <header className="mb-5 lg:mb-6 relative z-20 shrink-0">
         <Motion.h2 
+          id="nutrient-view-heading"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="font-['Playfair_Display'] text-4xl md:text-6xl font-semibold tracking-[-0.02em] text-[#1a1a1a]"
@@ -69,12 +76,14 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
       </header>
 
       {/* Metric Switcher */}
-      <div className="relative z-20 flex flex-wrap gap-2 mb-5 lg:mb-6 shrink-0">
+      <div role="group" aria-label="Choose nutrient metric" className="relative z-20 flex flex-wrap gap-2 mb-5 lg:mb-6 shrink-0">
         {METRICS.map((metric) => (
           <button
+            type="button"
             key={metric.key}
             onClick={() => setActiveMetric(metric.key)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] uppercase tracking-widest font-semibold transition-all duration-500 ${
+            aria-pressed={activeMetric === metric.key}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] uppercase tracking-widest font-semibold transition-all duration-500 min-h-11 ${
               activeMetric === metric.key
                 ? 'border-black/30 shadow-sm'
                 : 'border-black/10 text-black/40 hover:border-black/20'
@@ -92,8 +101,8 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
         <Motion.div
           key={activeMetric}
           initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: [1, 1.05, 1], opacity: [0.08, 0.12, 0.08] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          animate={shouldReduceMotion ? { scale: 1, opacity: 0.1 } : { scale: [1, 1.05, 1], opacity: [0.08, 0.12, 0.08] }}
+          transition={shouldReduceMotion ? { duration: 0 } : { duration: 8, repeat: Infinity, ease: "easeInOut" }}
           className="w-[70vw] h-[70vw] max-w-[900px] max-h-[900px] rounded-full blur-[100px]"
           style={{ backgroundColor: currentMetricConfig.color }}
         />
@@ -118,26 +127,32 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
           {sortedIngredients.map((ingredient, i) => {
             const pos = getPosition(ingredient, i, sortedIngredients.length);
             const value = ingredient.nutrients[activeMetric];
-            const isHovered = hoveredNode?.id === ingredient.id;
+            const isActive = activeNode?.id === ingredient.id;
             const nodeSize = 12 + (value / PROTOTYPE_INDEX_RANGES.nutrientMetrics.max) * 20; // 12px to 32px
 
             return (
-              <Motion.div
+              <Motion.button
+                type="button"
                 key={ingredient.id}
                 animate={{
                   left: `${pos.x}%`,
                   top: `${pos.y}%`,
-                  scale: isHovered ? 1.2 : 1,
+                  scale: isActive ? 1.2 : 1,
                 }}
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-10"
+                className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-10 min-w-11 min-h-11 bg-transparent border-0 p-0"
                 onMouseEnter={() => setHoveredNode(ingredient)}
                 onMouseLeave={() => setHoveredNode(null)}
+                onFocus={() => setHoveredNode(ingredient)}
+                onBlur={() => setHoveredNode(null)}
+                onClick={() => setSelectedNode(selectedNode?.id === ingredient.id ? null : ingredient)}
+                aria-pressed={selectedNode?.id === ingredient.id}
+                aria-label={`${ingredient.name}. ${currentMetricConfig.label}: ${value}. Select for complete nutrient details.`}
               >
                 <div className="flex flex-col items-center gap-2">
                   <Motion.div
-                    animate={{ y: [0, -3, 3, 0] }}
-                    transition={{ duration: 3 + (i % 3), repeat: Infinity, ease: "easeInOut" }}
+                    animate={shouldReduceMotion ? undefined : { y: [0, -3, 3, 0] }}
+                    transition={shouldReduceMotion ? undefined : { duration: 3 + (i % 3), repeat: Infinity, ease: "easeInOut" }}
                     className="flex flex-col items-center gap-1.5"
                   >
                     <div 
@@ -146,10 +161,10 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
                         backgroundColor: ingredient.color,
                         width: nodeSize,
                         height: nodeSize,
-                        boxShadow: isHovered ? `0 0 20px ${ingredient.color}60` : undefined,
+                        boxShadow: isActive ? `0 0 20px ${ingredient.color}60` : undefined,
                       }}
                     />
-                    <span className={`font-['Space_Grotesk'] text-[9px] md:text-[10px] tracking-widest uppercase font-semibold bg-white/80 backdrop-blur-md px-2 py-0.5 rounded border border-black/5 transition-all duration-300 whitespace-nowrap ${isHovered ? 'text-black shadow-md' : 'text-black/50'}`}>
+                    <span className={`font-['Space_Grotesk'] text-[10px] tracking-widest uppercase font-semibold bg-white/80 backdrop-blur-md px-2 py-0.5 rounded border border-black/5 transition-all duration-300 whitespace-nowrap ${isActive ? 'text-black shadow-md' : 'text-black/65'}`}>
                       {ingredient.name}
                     </span>
                     {/* Value badge */}
@@ -163,7 +178,7 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
 
                   {/* Hover Detail */}
                   <AnimatePresence>
-                    {isHovered && (
+                    {isActive && (
                       <Motion.div
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -173,7 +188,7 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
                         <div className="grid grid-cols-2 gap-2">
                           {METRICS.map((m) => (
                             <div key={m.key} className="flex flex-col">
-                              <span className="text-[8px] uppercase tracking-widest font-semibold text-black/40">{m.label.split(' ')[0]}</span>
+                              <span className="text-[9px] uppercase tracking-widest font-semibold text-black/50">{m.label.split(' ')[0]}</span>
                               <div className="flex items-center gap-1 mt-1">
                                 <div className="flex-1 h-1 bg-black/5 rounded-full overflow-hidden">
                                   <div
@@ -193,11 +208,11 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
                     )}
                   </AnimatePresence>
                 </div>
-              </Motion.div>
+              </Motion.button>
             );
           })}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

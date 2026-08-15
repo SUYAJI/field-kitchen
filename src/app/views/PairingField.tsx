@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import { motion as Motion, AnimatePresence } from "motion/react";
+import { motion as Motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { getPairingStrength, INGREDIENTS, Ingredient, PairingStrength, PREPARATION_METHODS, Region, PrepMethod } from "../data";
 import { Flame, Droplets, Beaker, Sprout, Wind } from "lucide-react";
 
@@ -26,6 +26,7 @@ const STRENGTH_CONFIG: Record<Exclude<PairingStrength, null>, { label: string; o
 };
 
 export function PairingField({ activeRegion }: { activeRegion: Region | "All" }) {
+  const shouldReduceMotion = useReducedMotion();
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
   const [activeFilters, setActiveFilters] = useState<PrepMethod[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,7 +51,7 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
     );
   };
 
-  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const cardRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
   
   const updatePositions = useCallback(() => {
     if (!containerRef.current) return;
@@ -102,9 +103,10 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
   const scrollTop = scrollRef.current?.scrollTop || 0;
 
   return (
-    <div className="w-full min-h-0 flex flex-col p-5 sm:p-6 lg:p-10 relative overflow-visible lg:h-full lg:overflow-hidden">
+    <section aria-labelledby="pairing-field-heading" className="w-full min-h-0 flex flex-col p-5 sm:p-6 lg:p-10 relative overflow-visible lg:h-full lg:overflow-hidden">
       <header className="mb-5 lg:mb-6 relative z-20 pointer-events-none shrink-0">
         <Motion.h2 
+          id="pairing-field-heading"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="font-['Playfair_Display'] text-4xl md:text-6xl font-semibold tracking-[-0.02em] text-[#1a1a1a]"
@@ -117,16 +119,18 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
       </header>
 
       {/* Technique Filters */}
-      <div className="relative z-20 flex flex-wrap gap-2 mb-5 lg:mb-6 border-b border-black/10 pb-4 lg:pb-5 shrink-0">
-        <span className="text-[10px] uppercase font-semibold tracking-widest text-black/30 w-full mb-2">Technique Reshaping Filters</span>
+      <div role="group" aria-label="Filter pairings by preparation technique" className="relative z-20 flex flex-wrap gap-2 mb-5 lg:mb-6 border-b border-black/10 pb-4 lg:pb-5 shrink-0">
+        <span className="text-[10px] uppercase font-semibold tracking-widest text-black/45 w-full mb-2">Technique Reshaping Filters</span>
         {PREP_METHODS.map((method) => {
           const isActive = activeFilters.includes(method.id);
           const Icon = method.icon;
           return (
             <button
+              type="button"
               key={method.id}
               onClick={() => toggleFilter(method.id)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] uppercase tracking-widest font-semibold transition-all duration-300 ${
+              aria-pressed={isActive}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] uppercase tracking-widest font-semibold transition-all duration-300 min-h-11 ${
                 isActive 
                   ? 'bg-black text-white border-black shadow-lg' 
                   : 'bg-white/40 text-black/50 border-black/10 hover:border-black/30 backdrop-blur-sm'
@@ -169,7 +173,7 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
       </AnimatePresence>
 
       {/* Field Visualization */}
-      <main ref={containerRef} className="relative z-10 w-full overflow-visible lg:flex-1 lg:min-h-0 lg:overflow-hidden">
+      <div ref={containerRef} className="relative z-10 w-full overflow-visible lg:flex-1 lg:min-h-0 lg:overflow-hidden">
         {/* Background glow */}
         <AnimatePresence>
           {selectedIngredient && (
@@ -245,9 +249,10 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
                 : '';
 
             return (
-              <Motion.div
+              <Motion.button
+                type="button"
                 key={ingredient.id}
-                ref={(el: HTMLDivElement | null) => {
+                ref={(el: HTMLButtonElement | null) => {
                   if (el) cardRefs.current.set(ingredient.id, el);
                   else cardRefs.current.delete(ingredient.id);
                 }}
@@ -261,7 +266,9 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
                   setSelectedIngredient(isSelected ? null : ingredient);
                   setTimeout(updatePositions, 150);
                 }}
-                className={`relative aspect-square cursor-pointer group rounded-2xl overflow-hidden border transition-all duration-300 origin-center ${
+                aria-pressed={isSelected}
+                aria-label={`${ingredient.name}. ${strengthLabel || 'No active pairing relationship'}${passesFilters || isSelected ? '' : '. Hidden by the active technique filter'}.`}
+                className={`relative aspect-square w-full text-left cursor-pointer group rounded-2xl overflow-hidden border transition-all duration-300 origin-center ${
                   isSelected
                     ? 'border-black/40 shadow-2xl z-20 ring-2 ring-white/50 scale-[1.03]'
                     : strength === 'strong' && passesFilters
@@ -292,8 +299,8 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
                 {strength === 'strong' && passesFilters && selectedIngredient && (
                   <Motion.div
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: [0.4, 0.7, 0.4] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    animate={shouldReduceMotion ? { opacity: 0.55 } : { opacity: [0.4, 0.7, 0.4] }}
+                    transition={shouldReduceMotion ? { duration: 0 } : { duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     className="absolute inset-0 rounded-2xl pointer-events-none"
                     style={{ boxShadow: `inset 0 0 20px ${ingredient.color}40, 0 0 15px ${ingredient.color}25` }}
                   />
@@ -321,9 +328,9 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
                   </div>
 
                   <div>
-                    <h3 className="font-['Playfair_Display'] text-base sm:text-xl md:text-2xl font-semibold text-white drop-shadow-lg leading-tight">
+                    <span className="block font-['Playfair_Display'] text-base sm:text-xl md:text-2xl font-semibold text-white drop-shadow-lg leading-tight">
                       {ingredient.name}
-                    </h3>
+                    </span>
                     <div className="text-[8px] sm:text-[9px] font-semibold tracking-widest uppercase mt-0.5 h-3.5 drop-shadow-md"
                       style={{ 
                         color: strengthLabel 
@@ -354,11 +361,11 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
                     })}
                   </div>
                 )}
-              </Motion.div>
+              </Motion.button>
             );
           })}
         </div>
-      </main>
-    </div>
+      </div>
+    </section>
   );
 }

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion as Motion, AnimatePresence } from "motion/react";
+import { useRef, useState } from "react";
+import { motion as Motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { ArrowRight, X, Database } from "lucide-react";
 import {
   ACTIVE_SOURCE_LAYERS,
@@ -13,6 +13,7 @@ import {
   SEASONS,
   SUPPORTED_SOURCE_LAYERS,
 } from "../data";
+import { useOverlayFocus } from "../accessibility";
 
 const DATASET_DETAILS = [
   { label: "Primary Ingredients", value: INGREDIENTS.map((ingredient) => ingredient.name).join(', ') },
@@ -33,6 +34,19 @@ const DATASET_DETAILS = [
 
 export function LandingPage({ onEnter }: { onEnter: () => void }) {
   const [datasetOpen, setDatasetOpen] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
+  const datasetTriggerRef = useRef<HTMLButtonElement>(null);
+  const datasetPanelRef = useRef<HTMLElement>(null);
+  const datasetCloseRef = useRef<HTMLButtonElement>(null);
+
+  useOverlayFocus({
+    open: datasetOpen,
+    containerRef: datasetPanelRef,
+    initialFocusRef: datasetCloseRef,
+    restoreFocusRef: datasetTriggerRef,
+    onClose: () => setDatasetOpen(false),
+    trapFocus: true,
+  });
 
   return (
     <div className="relative w-full min-h-dvh flex flex-col justify-start lg:justify-center items-center overflow-x-hidden p-6 md:p-12 text-[#0d2110] selection:bg-[#e76f51]/30 lg:h-full lg:overflow-y-auto">
@@ -43,18 +57,18 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
           style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}
         />
         <Motion.div 
-          animate={{ scale: [1, 1.05, 1], rotate: [0, 2, -2, 0] }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          animate={shouldReduceMotion ? undefined : { scale: [1, 1.05, 1], rotate: [0, 2, -2, 0] }}
+          transition={shouldReduceMotion ? undefined : { duration: 25, repeat: Infinity, ease: "linear" }}
           className="absolute -top-[20%] -right-[10%] w-[80vw] h-[80vw] max-w-[1200px] max-h-[1200px] rounded-full bg-[#bc6c25] blur-[140px] mix-blend-multiply opacity-20" 
         />
         <Motion.div 
-          animate={{ scale: [1, 1.1, 1], rotate: [0, -3, 3, 0] }}
-          transition={{ duration: 30, repeat: Infinity, ease: "linear", delay: 2 }}
+          animate={shouldReduceMotion ? undefined : { scale: [1, 1.1, 1], rotate: [0, -3, 3, 0] }}
+          transition={shouldReduceMotion ? undefined : { duration: 30, repeat: Infinity, ease: "linear", delay: 2 }}
           className="absolute -bottom-[20%] -left-[10%] w-[90vw] h-[90vw] max-w-[1400px] max-h-[1400px] rounded-full bg-[#2a9d8f] blur-[160px] mix-blend-multiply opacity-15" 
         />
         <Motion.div 
-          animate={{ x: [0, 30, -30, 0], y: [0, -20, 20, 0] }}
-          transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
+          animate={shouldReduceMotion ? undefined : { x: [0, 30, -30, 0], y: [0, -20, 20, 0] }}
+          transition={shouldReduceMotion ? undefined : { duration: 35, repeat: Infinity, ease: "linear" }}
           className="absolute top-[40%] left-[30%] w-[50vw] h-[50vw] max-w-[700px] max-h-[700px] rounded-full bg-[#e76f51] blur-[120px] mix-blend-multiply opacity-10" 
         />
       </div>
@@ -98,16 +112,22 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
             
             <div className="flex flex-col gap-4">
               <button 
+                type="button"
                 onClick={onEnter}
-                className="group flex items-center gap-4 text-xs font-semibold tracking-[0.2em] uppercase text-black pb-2 border-b border-black/20 hover:border-black transition-colors duration-500 w-fit"
+                className="group flex items-center gap-4 text-xs font-semibold tracking-[0.2em] uppercase text-black pb-2 border-b border-black/20 hover:border-black transition-colors duration-500 w-fit min-h-11"
               >
                 Enter System
                 <ArrowRight className="w-4 h-4 transition-transform duration-500 group-hover:translate-x-2" />
               </button>
 
               <button
+                ref={datasetTriggerRef}
+                type="button"
                 onClick={() => setDatasetOpen(true)}
-                className="group flex items-center gap-3 text-[10px] font-semibold tracking-[0.15em] uppercase text-black/40 hover:text-black/70 transition-colors duration-500 w-fit mt-4"
+                aria-haspopup="dialog"
+                aria-expanded={datasetOpen}
+                aria-controls="dataset-index-panel"
+                className="group flex items-center gap-3 text-[10px] font-semibold tracking-[0.15em] uppercase text-black/50 hover:text-black/70 transition-colors duration-500 w-fit mt-4 min-h-11"
               >
                 <Database className="w-3 h-3" />
                 Dataset: Pacific Northwest Field Index
@@ -174,9 +194,16 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
               className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[200]"
+              aria-hidden="true"
               onClick={() => setDatasetOpen(false)}
             />
-            <Motion.div
+            <Motion.aside
+              id="dataset-index-panel"
+              ref={datasetPanelRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="dataset-index-title"
+              tabIndex={-1}
               initial={{ x: "100%", opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: "100%", opacity: 0 }}
@@ -185,10 +212,10 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
             >
               <div className="flex items-center justify-between p-5 sm:p-8 border-b border-black/10">
                 <div>
-                  <h3 className="font-['Playfair_Display'] text-2xl font-semibold tracking-tight">Dataset Index</h3>
+                  <h2 id="dataset-index-title" className="font-['Playfair_Display'] text-2xl font-semibold tracking-tight">Dataset Index</h2>
                   <span className="text-[10px] uppercase tracking-widest font-semibold text-black/40">Pacific Northwest Field Index</span>
                 </div>
-                <button onClick={() => setDatasetOpen(false)} className="p-2 hover:bg-black/5 rounded-full transition-colors">
+                <button ref={datasetCloseRef} type="button" aria-label="Close dataset index" onClick={() => setDatasetOpen(false)} className="p-2 hover:bg-black/5 rounded-full transition-colors min-w-11 min-h-11 flex items-center justify-center">
                   <X className="w-5 h-5 text-black/50" />
                 </button>
               </div>
@@ -240,7 +267,7 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
                   </p>
                 </div>
               </div>
-            </Motion.div>
+            </Motion.aside>
           </>
         )}
       </AnimatePresence>

@@ -36,10 +36,11 @@ export function PreparationGuide({ activeRegion }: { activeRegion: Region | "All
   }, [filteredIngredients, activeMethod]);
 
   return (
-    <div className="w-full min-h-0 flex flex-col p-5 sm:p-6 lg:p-10 relative overflow-visible lg:h-full lg:overflow-hidden">
+    <section aria-labelledby="preparation-guide-heading" className="w-full min-h-0 flex flex-col p-5 sm:p-6 lg:p-10 relative overflow-visible lg:h-full lg:overflow-hidden">
       <header className="mb-6 relative z-20 shrink-0 flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4">
         <div>
           <Motion.h2 
+            id="preparation-guide-heading"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="font-['Playfair_Display'] text-4xl md:text-6xl font-semibold tracking-[-0.02em] text-[#1a1a1a]"
@@ -50,16 +51,20 @@ export function PreparationGuide({ activeRegion }: { activeRegion: Region | "All
             Technique-Ingredient Compatibility
           </span>
         </div>
-        <div className="flex gap-2 text-[10px] uppercase tracking-widest font-semibold">
+        <div role="group" aria-label="Choose preparation guide layout" className="flex gap-2 text-[10px] uppercase tracking-widest font-semibold">
           <button
+            type="button"
             onClick={() => setViewMode('cards')}
-            className={`px-4 py-2 rounded-full border transition-all duration-300 ${viewMode === 'cards' ? 'bg-black text-white border-black' : 'border-black/10 text-black/40'}`}
+            aria-pressed={viewMode === 'cards'}
+            className={`px-4 py-2 rounded-full border transition-all duration-300 min-h-11 ${viewMode === 'cards' ? 'bg-black text-white border-black' : 'border-black/10 text-black/50'}`}
           >
             Card View
           </button>
           <button
+            type="button"
             onClick={() => setViewMode('matrix')}
-            className={`px-4 py-2 rounded-full border transition-all duration-300 ${viewMode === 'matrix' ? 'bg-black text-white border-black' : 'border-black/10 text-black/40'}`}
+            aria-pressed={viewMode === 'matrix'}
+            className={`px-4 py-2 rounded-full border transition-all duration-300 min-h-11 ${viewMode === 'matrix' ? 'bg-black text-white border-black' : 'border-black/10 text-black/50'}`}
           >
             Matrix
           </button>
@@ -68,7 +73,8 @@ export function PreparationGuide({ activeRegion }: { activeRegion: Region | "All
 
       <AnimatePresence mode="wait">
         {viewMode === 'cards' ? (
-          <Motion.main
+          <Motion.section
+            aria-label="Preparation technique cards"
             key="cards"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -76,8 +82,8 @@ export function PreparationGuide({ activeRegion }: { activeRegion: Region | "All
             className="flex-none flex flex-col lg:flex-row gap-8 mt-2 z-10 relative min-h-0 lg:flex-1"
           >
             {/* Techniques List */}
-            <div className="w-full lg:w-1/3 flex flex-col gap-3 lg:border-r border-black/10 lg:pr-6 overflow-visible pb-8 shrink-0 lg:overflow-y-auto">
-              <div className="text-[10px] uppercase font-semibold tracking-widest text-black/30 mb-2">Technique Index</div>
+            <div role="group" aria-label="Choose preparation technique" className="w-full lg:w-1/3 flex flex-col gap-3 lg:border-r border-black/10 lg:pr-6 overflow-visible pb-8 shrink-0 lg:overflow-y-auto">
+              <div className="text-[10px] uppercase font-semibold tracking-widest text-black/45 mb-2">Technique Index</div>
               {PREP_METHODS.map((method) => {
                 const Icon = method.icon;
                 const isActive = activeMethod === method.id;
@@ -85,9 +91,11 @@ export function PreparationGuide({ activeRegion }: { activeRegion: Region | "All
                 
                 return (
                   <button
+                    type="button"
                     key={method.id}
                     onClick={() => setActiveMethod(method.id)}
-                    className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-500 border ${isActive ? 'bg-white/60 border-black/10 shadow-sm translate-x-2' : 'border-transparent hover:bg-white/20 text-black/40 hover:text-black/60'}`}
+                    aria-pressed={isActive}
+                    className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-500 border min-h-11 ${isActive ? 'bg-white/60 border-black/10 shadow-sm translate-x-2' : 'border-transparent hover:bg-white/20 text-black/50 hover:text-black/70'}`}
                   >
                     <div className={`p-2.5 rounded-full ${isActive ? 'bg-black text-white' : 'bg-black/5 text-black/40'}`}>
                       <Icon className="w-4 h-4" />
@@ -103,7 +111,7 @@ export function PreparationGuide({ activeRegion }: { activeRegion: Region | "All
 
             {/* Compatible Ingredients */}
             <div className="w-full lg:w-2/3 relative flex flex-col overflow-visible pb-12 lg:overflow-y-auto">
-              <div className="text-[10px] uppercase font-semibold tracking-widest text-black/30 mb-6">Compatible Ingredients</div>
+              <div className="text-[10px] uppercase font-semibold tracking-widest text-black/45 mb-6">Compatible Ingredients</div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative">
                 <AnimatePresence mode="popLayout">
@@ -161,35 +169,32 @@ export function PreparationGuide({ activeRegion }: { activeRegion: Region | "All
                 )}
               </div>
             </div>
-          </Motion.main>
+          </Motion.section>
         ) : (
-          <Motion.main
+          <Motion.section
+            aria-label="Preparation compatibility matrix"
             key="matrix"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="flex-none overflow-x-auto overflow-y-visible z-10 relative pb-12 overscroll-x-contain lg:flex-1 lg:overflow-auto"
           >
-            <div className="text-[10px] uppercase font-semibold tracking-widest text-black/30 mb-4">Compatibility Matrix</div>
+            <div className="text-[10px] uppercase font-semibold tracking-widest text-black/45 mb-4">Compatibility Matrix</div>
             <div className="min-w-[700px]">
               <table className="w-full border-collapse">
                 <thead>
                   <tr>
-                    <th className="text-left p-3 text-[10px] uppercase tracking-widest font-semibold text-black/40 border-b border-black/10 sticky left-0 bg-[#faf9f6]/90 backdrop-blur-md z-10">
+                    <th scope="col" className="text-left p-3 text-[10px] uppercase tracking-widest font-semibold text-black/55 border-b border-black/10 sticky left-0 bg-[#faf9f6]/90 backdrop-blur-md z-10">
                       Ingredient
                     </th>
                     {PREP_METHODS.map((m) => {
                       const Icon = m.icon;
                       return (
-                        <th 
-                          key={m.id} 
-                          className={`p-3 text-center border-b transition-colors cursor-pointer ${activeMethod === m.id ? 'border-black/20 bg-black/[0.03]' : 'border-black/10'}`}
-                          onClick={() => setActiveMethod(m.id)}
-                        >
-                          <div className="flex flex-col items-center gap-1">
+                        <th key={m.id} scope="col" className={`text-center border-b transition-colors ${activeMethod === m.id ? 'border-black/20 bg-black/[0.03]' : 'border-black/10'}`}>
+                          <button type="button" aria-pressed={activeMethod === m.id} aria-label={`Highlight ${m.label} compatibility`} onClick={() => setActiveMethod(m.id)} className="w-full min-h-11 p-3 flex flex-col items-center justify-center gap-1">
                             <Icon className="w-3.5 h-3.5 text-black/40" />
-                            <span className="text-[9px] uppercase tracking-widest font-semibold text-black/40">{m.label}</span>
-                          </div>
+                            <span className="text-[10px] uppercase tracking-widest font-semibold text-black/55">{m.label}</span>
+                          </button>
                         </th>
                       );
                     })}
@@ -204,12 +209,12 @@ export function PreparationGuide({ activeRegion }: { activeRegion: Region | "All
                       transition={{ delay: idx * 0.03 }}
                       className="group hover:bg-white/40 transition-colors"
                     >
-                      <td className="p-3 border-b border-black/5 sticky left-0 bg-[#faf9f6]/90 backdrop-blur-md z-10">
+                      <th scope="row" className="p-3 border-b border-black/5 sticky left-0 bg-[#faf9f6]/90 backdrop-blur-md z-10 text-left font-normal">
                         <div className="flex items-center gap-2">
                           <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: ingredient.color }} />
                           <span className="font-['Playfair_Display'] text-lg">{ingredient.name}</span>
                         </div>
-                      </td>
+                      </th>
                       {PREP_METHODS.map((m) => {
                         const isCompatible = ingredient.preparations.includes(m.id);
                         const isHighlighted = m.id === activeMethod;
@@ -243,9 +248,9 @@ export function PreparationGuide({ activeRegion }: { activeRegion: Region | "All
                 </tbody>
               </table>
             </div>
-          </Motion.main>
+          </Motion.section>
         )}
       </AnimatePresence>
-    </div>
+    </section>
   );
 }

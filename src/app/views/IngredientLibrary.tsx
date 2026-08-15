@@ -1,7 +1,8 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { motion as Motion, AnimatePresence } from "motion/react";
 import { X, Calendar, Flame, Droplets, Beaker, Sprout, Wind, Link2, MapPin, Leaf } from "lucide-react";
 import { getIngredientByPairingLabel, INGREDIENTS, Ingredient, MONTH_INITIALS, PrepMethod, Region } from "../data";
+import { useMediaQuery, useOverlayFocus } from "../accessibility";
 
 const PrepIcon = ({ type, className }: { type: PrepMethod; className?: string }) => {
   switch (type) {
@@ -19,6 +20,19 @@ const PrepIcon = ({ type, className }: { type: PrepMethod; className?: string })
 
 export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "All" }) {
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
+  const detailPanelRef = useRef<HTMLElement>(null);
+  const detailCloseRef = useRef<HTMLButtonElement>(null);
+  const detailTriggerRef = useRef<HTMLElement | null>(null);
+  const isModalDetail = useMediaQuery("(max-width: 1023px)");
+
+  useOverlayFocus({
+    open: Boolean(selectedIngredient),
+    containerRef: detailPanelRef,
+    initialFocusRef: detailCloseRef,
+    restoreFocusRef: detailTriggerRef,
+    onClose: () => setSelectedIngredient(null),
+    trapFocus: isModalDetail,
+  });
 
   const filteredIngredients = useMemo(() => {
     return INGREDIENTS.filter(
@@ -35,12 +49,14 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
   return (
     <div className="w-full min-h-0 flex overflow-visible relative lg:h-full lg:overflow-hidden">
       <div className={`flex-1 transition-all duration-700 ease-[0.16,1,0.3,1] ${selectedIngredient ? 'lg:pr-[440px]' : ''} overflow-visible p-5 sm:p-6 lg:overflow-y-auto lg:p-10`}>
+        <h2 className="sr-only">Ingredient Library</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pb-20">
           <AnimatePresence>
             {filteredIngredients.map((ingredient, idx) => {
               const pairingStrength = ingredient.pairings.length;
               return (
-                <Motion.div
+                <Motion.button
+                  type="button"
                   key={ingredient.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -48,8 +64,14 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                   transition={{ duration: 0.5, delay: idx * 0.04, ease: "easeOut" }}
                   whileHover="hover"
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => setSelectedIngredient(ingredient)}
-                  className={`group relative h-[300px] sm:h-[340px] bg-white/40 backdrop-blur-md border border-black/5 rounded-2xl flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 ${selectedIngredient?.id === ingredient.id ? 'ring-2 ring-black/20 shadow-2xl' : ''}`}
+                  onClick={(event) => {
+                    detailTriggerRef.current = event.currentTarget;
+                    setSelectedIngredient(ingredient);
+                  }}
+                  aria-expanded={selectedIngredient?.id === ingredient.id}
+                  aria-controls="ingredient-detail-panel"
+                  aria-label={`${ingredient.name}, ${ingredient.seasons.join(' and ')}, ${ingredient.region.join(', ')}. Open ingredient details.`}
+                  className={`group relative h-[300px] sm:h-[340px] w-full text-left bg-white/40 backdrop-blur-md border border-black/5 rounded-2xl flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 ${selectedIngredient?.id === ingredient.id ? 'ring-2 ring-black/20 shadow-2xl' : ''}`}
                 >
                   {/* Hover BG */}
                   <div 
@@ -91,9 +113,9 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                   </header>
 
                   <div className="relative z-10 p-5 mt-auto">
-                    <h2 className="font-['Playfair_Display'] text-4xl font-semibold tracking-tight text-[#1a1a1a] mb-1 group-hover:text-white transition-colors duration-500">
+                    <span className="block font-['Playfair_Display'] text-4xl font-semibold tracking-tight text-[#1a1a1a] mb-1 group-hover:text-white transition-colors duration-500">
                       {ingredient.name}
-                    </h2>
+                    </span>
                     <Motion.div 
                       variants={{
                         hover: { opacity: 1, x: 0 },
@@ -119,7 +141,7 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                       {ingredient.sourceLayer}
                     </span>
                   </footer>
-                </Motion.div>
+                </Motion.button>
               );
             })}
           </AnimatePresence>
@@ -129,7 +151,13 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
       {/* Detail Panel */}
       <AnimatePresence>
         {selectedIngredient && (
-          <Motion.div
+          <Motion.aside
+            id="ingredient-detail-panel"
+            ref={detailPanelRef}
+            role={isModalDetail ? "dialog" : "complementary"}
+            aria-modal={isModalDetail ? "true" : undefined}
+            aria-labelledby="ingredient-detail-title"
+            tabIndex={-1}
             initial={{ x: "100%", opacity: 0.5 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0 }}
@@ -141,15 +169,18 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
               <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${selectedIngredient.image})` }} />
               <div className="absolute inset-0 bg-gradient-to-t from-[#faf9f6] via-transparent to-transparent" />
               <button 
+                ref={detailCloseRef}
+                type="button"
+                aria-label="Close ingredient details"
                 onClick={() => setSelectedIngredient(null)}
-                className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-md hover:bg-white rounded-full transition-colors z-10"
+                className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-md hover:bg-white rounded-full transition-colors z-10 min-w-11 min-h-11 flex items-center justify-center"
               >
                 <X className="w-4 h-4 text-black/60" />
               </button>
             </div>
 
             <div className="px-5 sm:px-8 pb-8 -mt-8 relative z-10 flex flex-col flex-1">
-              <h2 className="font-['Playfair_Display'] text-4xl sm:text-5xl tracking-[-0.02em] font-semibold mb-1 text-[#1a1a1a]">
+              <h2 id="ingredient-detail-title" className="font-['Playfair_Display'] text-4xl sm:text-5xl tracking-[-0.02em] font-semibold mb-1 text-[#1a1a1a]">
                 {selectedIngredient.name}
               </h2>
               <p className="text-[10px] tracking-widest uppercase text-black/50 font-semibold mb-8">
@@ -192,9 +223,10 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                       const paired = getIngredientByPairingLabel(p);
                       return (
                         <button
+                          type="button"
                           key={p}
                           onClick={() => paired && setSelectedIngredient(paired)}
-                          className="flex items-center gap-2 px-3 py-1.5 bg-white/60 border border-black/5 rounded-full text-xs hover:border-black/20 transition-colors group/pair"
+                          className="flex items-center gap-2 px-3 py-1.5 bg-white/60 border border-black/5 rounded-full text-xs hover:border-black/20 transition-colors group/pair min-h-11"
                         >
                           {paired && <div className="w-2 h-2 rounded-full" style={{ backgroundColor: paired.color }} />}
                           <span className="text-black/70 group-hover/pair:text-black">{p}</span>
@@ -272,7 +304,7 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                 </div>
               </div>
             </div>
-          </Motion.div>
+          </Motion.aside>
         )}
       </AnimatePresence>
     </div>

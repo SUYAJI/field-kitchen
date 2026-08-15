@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { motion as Motion, AnimatePresence } from "motion/react";
+import { motion as Motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { REGIONS, Region } from "./data";
 import { IngredientLibrary } from "./views/IngredientLibrary";
 import { SeasonalMap } from "./views/SeasonalMap";
@@ -12,6 +12,7 @@ import { LandingPage } from "./views/LandingPage";
 type ViewMode = "LANDING" | "LIBRARY" | "SEASONAL" | "SOURCE" | "NUTRIENT" | "PREPARATION" | "PAIRING";
 
 export default function App() {
+  const shouldReduceMotion = useReducedMotion();
   const [activeView, setActiveView] = useState<ViewMode>("LANDING");
   const [activeRegion, setActiveRegion] = useState<Region | "All">("All");
 
@@ -67,18 +68,18 @@ export default function App() {
               
               {/* Soft Organic Gradients with slow drifting */}
               <Motion.div 
-                animate={{ x: [0, 40, -20, 0], y: [0, -40, 20, 0] }}
-                transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+                animate={shouldReduceMotion ? undefined : { x: [0, 40, -20, 0], y: [0, -40, 20, 0] }}
+                transition={shouldReduceMotion ? undefined : { duration: 30, repeat: Infinity, ease: "linear" }}
                 className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] max-w-[800px] max-h-[800px] rounded-full bg-[#f4a261] blur-[120px] mix-blend-multiply opacity-50" 
               />
               <Motion.div 
-                animate={{ x: [0, -30, 30, 0], y: [0, 50, -30, 0] }}
-                transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+                animate={shouldReduceMotion ? undefined : { x: [0, -30, 30, 0], y: [0, 50, -30, 0] }}
+                transition={shouldReduceMotion ? undefined : { duration: 40, repeat: Infinity, ease: "linear" }}
                 className="absolute bottom-[-10%] left-[-10%] w-[60vw] h-[60vw] max-w-[900px] max-h-[900px] rounded-full bg-[#e76f51] blur-[140px] mix-blend-multiply opacity-40" 
               />
               <Motion.div 
-                animate={{ x: [0, 50, -50, 0], y: [0, 20, -50, 0] }}
-                transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
+                animate={shouldReduceMotion ? undefined : { x: [0, 50, -50, 0], y: [0, 20, -50, 0] }}
+                transition={shouldReduceMotion ? undefined : { duration: 35, repeat: Infinity, ease: "linear" }}
                 className="absolute top-[30%] left-[20%] w-[40vw] h-[40vw] max-w-[600px] max-h-[600px] rounded-full bg-[#2a9d8f] blur-[100px] mix-blend-multiply opacity-30" 
               />
             </div>
@@ -86,18 +87,22 @@ export default function App() {
             {/* Top Navigation Bar */}
             <header className="relative z-50 flex flex-col xl:flex-row items-start xl:items-center justify-between p-5 md:p-6 xl:p-10 gap-4 xl:gap-6 border-b border-black/5 backdrop-blur-sm">
               <button 
+                type="button"
                 onClick={() => setActiveView("LANDING")}
-                className="font-['Playfair_Display'] text-3xl min-[1360px]:text-5xl tracking-[-0.04em] uppercase font-semibold text-[#0d2110] hover:opacity-70 transition-opacity shrink-0"
+                aria-label="Return to Field Kitchen landing"
+                className="font-['Playfair_Display'] text-3xl min-[1360px]:text-5xl tracking-[-0.04em] uppercase font-semibold text-[#0d2110] hover:opacity-70 transition-opacity shrink-0 min-h-11"
               >
                 Field Kitchen
               </button>
               
-              <nav className="w-full xl:w-auto flex flex-nowrap gap-5 xl:gap-4 min-[1360px]:gap-6 overflow-x-auto whitespace-nowrap pb-2 xl:pb-1 text-xs xl:text-[11px] min-[1360px]:text-xs font-semibold tracking-[0.15em] xl:tracking-[0.12em] min-[1360px]:tracking-[0.15em] uppercase text-black/40 overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <nav aria-label="Primary views" className="w-full xl:w-auto flex flex-nowrap gap-5 xl:gap-4 min-[1360px]:gap-6 overflow-x-auto whitespace-nowrap pb-2 xl:pb-1 text-xs xl:text-[11px] min-[1360px]:text-xs font-semibold tracking-[0.15em] xl:tracking-[0.12em] min-[1360px]:tracking-[0.15em] uppercase text-black/50 overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {views.map((v) => (
                   <button
+                    type="button"
                     key={v.id}
                     onClick={() => setActiveView(v.id)}
-                    className={`hover:text-black/80 transition-colors duration-500 pb-1 border-b ${activeView === v.id ? 'text-black/90 border-black/30' : 'border-transparent'}`}
+                    aria-current={activeView === v.id ? 'page' : undefined}
+                    className={`hover:text-black/80 transition-colors duration-500 pb-1 border-b min-h-11 ${activeView === v.id ? 'text-black/90 border-black/30' : 'border-transparent'}`}
                   >
                     {v.label}
                   </button>
@@ -106,26 +111,28 @@ export default function App() {
             </header>
 
             {/* Mode Indicator Breadcrumb */}
-            <div className="relative z-40 px-5 md:px-6 xl:px-10 py-2 flex items-center gap-2 overflow-x-auto whitespace-nowrap text-[9px] uppercase tracking-[0.2em] font-semibold text-black/25 backdrop-blur-md bg-[#faf9f6]/30 border-b border-black/[0.03] overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div aria-label="Current location" className="relative z-40 px-5 md:px-6 xl:px-10 py-2 flex items-center gap-2 overflow-x-auto whitespace-nowrap text-[10px] uppercase tracking-[0.2em] font-semibold text-black/40 backdrop-blur-md bg-[#faf9f6]/30 border-b border-black/[0.03] overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <span className="text-black/40">Field Kitchen</span>
-              <span className="text-black/15">/</span>
-              <span className="text-black/15">Pacific Northwest</span>
+              <span className="text-black/25">/</span>
+              <span className="text-black/40">Pacific Northwest</span>
               {breadcrumbParts.map((part, i) => (
                 <span key={part} className="flex items-center gap-2">
-                  <span className="text-black/15">/</span>
+                  <span className="text-black/25">/</span>
                   <span className={i === 0 ? 'text-black/50' : 'text-[#d84b2a]/60'}>{part}</span>
                 </span>
               ))}
             </div>
 
             {/* Persistent Region Filter */}
-            <div className="relative z-40 px-5 md:px-6 xl:px-10 py-3 flex flex-nowrap gap-3 items-center overflow-x-auto whitespace-nowrap text-[10px] uppercase tracking-widest font-semibold border-b border-black/5 backdrop-blur-md overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <span className="text-black/30 mr-2 shrink-0">Region:</span>
+            <div role="group" aria-label="Filter by region" className="relative z-40 px-5 md:px-6 xl:px-10 py-3 flex flex-nowrap gap-3 items-center overflow-x-auto whitespace-nowrap text-[10px] uppercase tracking-widest font-semibold border-b border-black/5 backdrop-blur-md overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <span className="text-black/45 mr-2 shrink-0">Region:</span>
               {regions.map((r) => (
                 <button
+                  type="button"
                   key={r}
                   onClick={() => setActiveRegion(r)}
-                  className={`px-3 py-1.5 rounded-full border transition-all duration-300 shrink-0 ${activeRegion === r ? 'border-[#d84b2a]/50 bg-[#d84b2a]/10 text-[#d84b2a]' : 'border-black/10 text-black/40 hover:border-black/30 hover:text-black/60'}`}
+                  aria-pressed={activeRegion === r}
+                  className={`px-3 py-1.5 rounded-full border transition-all duration-300 shrink-0 min-h-11 ${activeRegion === r ? 'border-[#d84b2a]/50 bg-[#d84b2a]/10 text-[#d84b2a]' : 'border-black/10 text-black/50 hover:border-black/30 hover:text-black/70'}`}
                 >
                   {r}
                 </button>
@@ -133,7 +140,7 @@ export default function App() {
             </div>
 
             {/* Main Content Area with View Transitions */}
-            <main className="relative z-[60] flex-none overflow-visible lg:z-10 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
+            <main aria-label={activeViewLabel} className="relative z-[60] flex-none overflow-visible lg:z-10 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
               <AnimatePresence mode="wait">
                 {activeView === "LIBRARY" && (
                   <Motion.div key="LIBRARY" initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-20}} transition={{duration: 0.8, ease: "easeOut"}} className="w-full min-h-0 lg:h-full">
