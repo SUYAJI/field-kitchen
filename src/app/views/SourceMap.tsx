@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { motion as Motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { INGREDIENTS, Region, SourceLayer, Ingredient, SUPPORTED_SOURCE_LAYERS } from "../data";
 
-const LAYER_CONFIG: Record<SourceLayer, { radius: number; jitterScale: number; inset: number; labelTop: number; color: string }> = {
-  Local: { radius: 12, jitterScale: 0.3, inset: 38, labelTop: 40, color: '#2a9d8f' },
-  Regional: { radius: 28, jitterScale: 0.3, inset: 22, labelTop: 24, color: '#f4a261' },
-  Imported: { radius: 35, jitterScale: 0.25, inset: 15, labelTop: 17, color: '#bc6c25' },
-  'Wild Foraged': { radius: 42, jitterScale: 0.2, inset: 8, labelTop: 10, color: '#606c38' },
+const LAYER_CONFIG: Record<SourceLayer, { radius: number; jitterScale: number; inset: number; color: string }> = {
+  Local: { radius: 18, jitterScale: 0.3, inset: 32, color: '#2a9d8f' },
+  Regional: { radius: 28, jitterScale: 0.3, inset: 22, color: '#f4a261' },
+  Imported: { radius: 35, jitterScale: 0.25, inset: 15, color: '#bc6c25' },
+  'Wild Foraged': { radius: 42, jitterScale: 0.2, inset: 8, color: '#606c38' },
 };
 const HABITAT_MAP: Record<string, string> = {
   'Forest Floor': 'Temperate old-growth understory, damp soil and duff layer',
@@ -18,6 +18,30 @@ const HABITAT_MAP: Record<string, string> = {
   'Canopy Layer': 'Upper forest canopy, Douglas fir and western red cedar stands',
   'Coastal Tide': 'Intertidal zone, nutrient-dense cold Pacific waters',
 };
+
+function getRadialLabelPlacement(x: number, y: number) {
+  const horizontal = x - 50;
+  const vertical = y - 50;
+
+  if (Math.abs(horizontal) > Math.abs(vertical)) {
+    return horizontal > 0
+      ? 'left-full top-1/2 ml-1 -translate-y-1/2'
+      : 'right-full top-1/2 mr-1 -translate-y-1/2';
+  }
+
+  return vertical > 0
+    ? 'left-1/2 top-full mt-1 -translate-x-1/2'
+    : 'bottom-full left-1/2 mb-1 -translate-x-1/2';
+}
+
+function getLayerLabelPosition(layer: SourceLayer) {
+  const angle = -Math.PI * 0.75;
+  const radius = LAYER_CONFIG[layer].radius;
+  return {
+    left: `${50 + Math.cos(angle) * radius}%`,
+    top: `${50 + Math.sin(angle) * radius}%`,
+  };
+}
 
 export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
   const shouldReduceMotion = useReducedMotion();
@@ -110,8 +134,8 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
           {activeLayers.map((layer) => (
             <div
               key={`label-${layer}`}
-              className={`absolute left-1/2 -translate-x-1/2 text-[10px] uppercase font-semibold tracking-[0.2em] ${layer === 'Wild Foraged' ? 'text-[#606c38]/60 border border-[#606c38]/20 px-3 py-0.5 rounded-full bg-[#606c38]/[0.03]' : 'text-black/50'}`}
-              style={{ top: `${LAYER_CONFIG[layer].labelTop}%` }}
+              className={`absolute z-[5] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[9px] uppercase font-semibold tracking-[0.18em] ${layer === 'Wild Foraged' ? 'text-[#606c38]/60 border border-[#606c38]/20 px-2.5 py-0.5 rounded-full bg-[#faf9f6]/80' : 'text-black/50 bg-[#faf9f6]/80 px-1'}`}
+              style={getLayerLabelPosition(layer)}
             >
               {layer}
             </div>
@@ -123,6 +147,7 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
             return items.map((ingredient, i) => {
               const pos = getPosition(ingredient, layer, i, items.length);
               const isActive = activeIngredient?.id === ingredient.id;
+              const labelPlacement = getRadialLabelPlacement(pos.x, pos.y);
               
               return (
                 <Motion.button
@@ -147,12 +172,12 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
                   onClick={() => setSelectedIngredient(selectedIngredient?.id === ingredient.id ? null : ingredient)}
                   aria-pressed={selectedIngredient?.id === ingredient.id}
                   aria-label={`${ingredient.name}. ${ingredient.sourceLayer} source from ${ingredient.originTag}, ${ingredient.region.join(', ')}. Select for habitat details.`}
-                  className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group flex flex-col items-center justify-center gap-1.5 z-10 min-w-11 min-h-11 bg-transparent border-0 p-0"
+                  className="absolute z-10 flex min-h-11 min-w-11 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center border-0 bg-transparent p-0"
                 >
                   <Motion.div
                     animate={shouldReduceMotion ? undefined : { y: [0, -4, 4, 0] }}
                     transition={shouldReduceMotion ? undefined : { duration: 4 + (i % 3), repeat: Infinity, ease: "easeInOut" }}
-                    className="flex flex-col items-center gap-1.5"
+                    className="relative flex h-11 w-11 items-center justify-center"
                   >
                     <Motion.div 
                       animate={{ scale: isActive ? 1.8 : 1 }}
@@ -160,37 +185,50 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
                       className="w-3.5 h-3.5 md:w-5 md:h-5 rounded-full shadow-lg border-2 border-white/60"
                       style={{ backgroundColor: ingredient.color }}
                     />
-                    <span className={`font-['Space_Grotesk'] text-[10px] tracking-widest uppercase font-semibold whitespace-nowrap bg-white/70 backdrop-blur-sm px-2 py-0.5 rounded-sm transition-all duration-300 ${isActive ? 'text-black bg-white shadow-md' : 'text-black/65'}`}>
+                    <span
+                      className={`absolute ${labelPlacement} hidden whitespace-nowrap rounded-sm bg-white/80 px-2 py-0.5 font-['Space_Grotesk'] text-[10px] font-semibold uppercase tracking-widest backdrop-blur-sm transition-all duration-300 sm:block ${isActive ? 'text-black bg-white shadow-md' : 'text-black/65'}`}
+                    >
                       {ingredient.name}
                     </span>
                   </Motion.div>
 
-                  {/* Habitat Context Tooltip */}
-                  <AnimatePresence>
-                    {isActive && (
-                      <Motion.div
-                        initial={{ opacity: 0, y: 5, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 5, scale: 0.95 }}
-                        transition={{ duration: 0.25 }}
-                        className="absolute top-full mt-2 w-52 bg-white/95 backdrop-blur-xl border border-black/10 rounded-xl p-3 shadow-xl z-50 pointer-events-none"
-                      >
-                        <div className="text-[9px] uppercase tracking-widest font-semibold text-black/40 mb-1.5">{ingredient.originTag}</div>
-                        <p className="text-[11px] text-black/60 leading-relaxed">{HABITAT_MAP[ingredient.originTag] || 'Pacific Northwest bioregion'}</p>
-                        <div className="flex gap-2 mt-2 text-[8px] uppercase tracking-widest font-semibold text-black/30">
-                          <span>{ingredient.sourceLayer}</span>
-                          <span>·</span>
-                          <span>{ingredient.region[0]}</span>
-                        </div>
-                      </Motion.div>
-                    )}
-                  </AnimatePresence>
                 </Motion.button>
               );
             });
           })}
         </div>
       </div>
+
+      <div className="grid grid-cols-2 gap-2 sm:hidden">
+        {filteredIngredients.map((ingredient) => (
+          <div key={ingredient.id} className="flex min-w-0 items-center gap-2 rounded-lg border border-black/5 bg-white/55 px-2.5 py-2">
+            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: ingredient.color }} />
+            <span className="truncate text-[9px] font-semibold uppercase tracking-wider text-black/60">{ingredient.name}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Selected habitat detail stays outside the dense radial field. */}
+      <AnimatePresence>
+        {activeIngredient && (
+          <Motion.div
+            key={activeIngredient.id}
+            initial={{ opacity: 0, y: 5, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 5, scale: 0.98 }}
+            transition={{ duration: 0.25 }}
+            className="relative z-20 mx-auto mt-3 w-full max-w-sm rounded-xl border border-black/10 bg-white/95 p-3 shadow-xl backdrop-blur-xl pointer-events-none lg:absolute lg:right-10 lg:top-[54%] lg:mx-0 lg:mt-0 lg:w-52"
+          >
+            <div className="mb-1.5 text-[9px] font-semibold uppercase tracking-widest text-black/40">{activeIngredient.originTag}</div>
+            <p className="text-[11px] leading-relaxed text-black/60">{HABITAT_MAP[activeIngredient.originTag] || 'Pacific Northwest bioregion'}</p>
+            <div className="mt-2 flex gap-2 text-[8px] font-semibold uppercase tracking-widest text-black/30">
+              <span>{activeIngredient.sourceLayer}</span>
+              <span>·</span>
+              <span>{activeIngredient.region[0]}</span>
+            </div>
+          </Motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

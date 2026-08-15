@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback, useLayoutEffect } from "react";
 import { motion as Motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { getPairingStrength, INGREDIENTS, Ingredient, PairingStrength, PREPARATION_METHODS, Region, PrepMethod } from "../data";
 import { Flame, Droplets, Beaker, Sprout, Wind } from "lucide-react";
@@ -25,13 +25,28 @@ const STRENGTH_CONFIG: Record<Exclude<PairingStrength, null>, { label: string; o
   experimental: { label: 'Experimental',    opacity: 0.6,  glow: 0,  lineWidth: 0.8, color: 'rgba(255,255,255,0.35)' },
 };
 
+type CardGeometry = { x: number; y: number; width: number; height: number };
+
+function getCardEdge(from: CardGeometry, toward: CardGeometry) {
+  const deltaX = toward.x - from.x;
+  const deltaY = toward.y - from.y;
+  const xScale = deltaX === 0 ? Number.POSITIVE_INFINITY : (from.width / 2) / Math.abs(deltaX);
+  const yScale = deltaY === 0 ? Number.POSITIVE_INFINITY : (from.height / 2) / Math.abs(deltaY);
+  const scale = Math.min(xScale, yScale);
+
+  return {
+    x: from.x + deltaX * scale,
+    y: from.y + deltaY * scale,
+  };
+}
+
 export function PairingField({ activeRegion }: { activeRegion: Region | "All" }) {
   const shouldReduceMotion = useReducedMotion();
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
   const [activeFilters, setActiveFilters] = useState<PrepMethod[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [cardPositions, setCardPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
+  const [cardPositions, setCardPositions] = useState<Map<string, CardGeometry>>(new Map());
 
   const filteredIngredients = useMemo(() => {
     return INGREDIENTS.filter(
@@ -56,28 +71,46 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
   const updatePositions = useCallback(() => {
     if (!containerRef.current) return;
     const containerRect = containerRef.current.getBoundingClientRect();
-    const scrollTop = scrollRef.current?.scrollTop || 0;
-    const newPositions = new Map<string, { x: number; y: number }>();
+    const newPositions = new Map<string, CardGeometry>();
     
     cardRefs.current.forEach((el, id) => {
       const rect = el.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
       newPositions.set(id, {
         x: rect.left - containerRect.left + rect.width / 2,
-        y: rect.top - containerRect.top + scrollTop + rect.height / 2,
+        y: rect.top - containerRect.top + rect.height / 2,
+        width: rect.width,
+        height: rect.height,
       });
     });
     setCardPositions(newPositions);
   }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(updatePositions, 300);
-    window.addEventListener('resize', updatePositions);
+  useLayoutEffect(() => {
+    let frame = 0;
+    const scheduleUpdate = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(updatePositions);
+    };
+
+    setCardPositions(new Map());
+    scheduleUpdate();
+
+    const resizeObserver = new ResizeObserver(scheduleUpdate);
+    if (containerRef.current) resizeObserver.observe(containerRef.current);
     const scrollEl = scrollRef.current;
-    if (scrollEl) scrollEl.addEventListener('scroll', updatePositions);
+    if (scrollEl) {
+      resizeObserver.observe(scrollEl);
+      scrollEl.addEventListener('scroll', scheduleUpdate, { passive: true });
+    }
+    cardRefs.current.forEach((card) => resizeObserver.observe(card));
+    window.addEventListener('resize', scheduleUpdate);
+
     return () => {
-      clearTimeout(timer);
-      window.removeEventListener('resize', updatePositions);
-      if (scrollEl) scrollEl.removeEventListener('scroll', updatePositions);
+      cancelAnimationFrame(frame);
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', scheduleUpdate);
+      if (scrollEl) scrollEl.removeEventListener('scroll', scheduleUpdate);
     };
   }, [selectedIngredient, activeFilters, filteredIngredients, updatePositions]);
 
@@ -95,12 +128,16 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
         if (!passesFilters) return null;
         const pos = cardPositions.get(ing.id);
         if (!pos) return null;
-        return { from: selectedPos, to: pos, color: ing.color, id: ing.id, strength };
+        return {
+          from: getCardEdge(selectedPos, pos),
+          to: getCardEdge(pos, selectedPos),
+          color: ing.color,
+          id: ing.id,
+          strength,
+        };
       })
       .filter(Boolean) as { from: { x: number; y: number }; to: { x: number; y: number }; color: string; id: string; strength: Exclude<PairingStrength, null> }[];
   }, [selectedIngredient, cardPositions, filteredIngredients, activeFilters]);
-
-  const scrollTop = scrollRef.current?.scrollTop || 0;
 
   return (
     <section aria-labelledby="pairing-field-heading" className="w-full min-h-0 flex flex-col p-5 sm:p-6 lg:p-10 relative overflow-visible lg:h-full lg:overflow-hidden">
@@ -173,7 +210,7 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
       </AnimatePresence>
 
       {/* Field Visualization */}
-      <div ref={containerRef} className="relative z-10 w-full overflow-visible lg:flex-1 lg:min-h-0 lg:overflow-hidden">
+      <div ref={containerRef} className="relative z-10 w-full overflow-hidden lg:flex-1 lg:min-h-0">
         {/* Background glow */}
         <AnimatePresence>
           {selectedIngredient && (
@@ -191,7 +228,7 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
 
         {/* Connection Lines SVG */}
         {connections.length > 0 && (
-          <svg className="absolute inset-0 w-full h-full pointer-events-none z-20" style={{ overflow: 'visible' }}>
+          <svg className="absolute inset-0 z-0 h-full w-full overflow-hidden pointer-events-none">
             <defs>
               {connections.map(conn => (
                 <linearGradient key={`grad-${conn.id}`} id={`grad-${conn.id}`} x1="0%" y1="0%" x2="100%" y2="0%">
@@ -206,9 +243,9 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
                 <Motion.line
                   key={`line-${conn.id}`}
                   x1={conn.from.x}
-                  y1={conn.from.y - scrollTop}
+                  y1={conn.from.y}
                   x2={conn.to.x}
-                  y2={conn.to.y - scrollTop}
+                  y2={conn.to.y}
                   stroke={`url(#grad-${conn.id})`}
                   strokeWidth={cfg.lineWidth}
                   strokeDasharray={conn.strength === 'experimental' ? '4 4' : undefined}
@@ -223,7 +260,7 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
 
         <div
           ref={scrollRef}
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 w-full h-auto overflow-visible pb-12 lg:h-full lg:max-h-full lg:overflow-y-auto lg:pb-20 content-start relative z-10"
+          className="relative z-10 grid w-full auto-rows-max grid-cols-2 content-start gap-3 overflow-visible pb-12 sm:grid-cols-3 md:gap-4 lg:h-full lg:max-h-full lg:grid-cols-4 lg:overflow-y-auto lg:pb-20"
         >
           {filteredIngredients.map((ingredient, i) => {
             const isSelected = selectedIngredient?.id === ingredient.id;
@@ -264,7 +301,6 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
                 transition={{ duration: 0.5, delay: i * 0.03 }}
                 onClick={() => {
                   setSelectedIngredient(isSelected ? null : ingredient);
-                  setTimeout(updatePositions, 150);
                 }}
                 aria-pressed={isSelected}
                 aria-label={`${ingredient.name}. ${strengthLabel || 'No active pairing relationship'}${passesFilters || isSelected ? '' : '. Hidden by the active technique filter'}.`}

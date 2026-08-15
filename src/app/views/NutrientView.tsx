@@ -14,6 +14,21 @@ const METRICS = NUTRIENT_METRICS.map((metric) => ({
   color: METRIC_COLORS[metric.key],
 }));
 
+function getRadialLabelPlacement(x: number, y: number) {
+  const horizontal = x - 50;
+  const vertical = y - 50;
+
+  if (Math.abs(horizontal) > Math.abs(vertical)) {
+    return horizontal > 0
+      ? 'left-full top-1/2 ml-1 -translate-y-1/2 items-start'
+      : 'right-full top-1/2 mr-1 -translate-y-1/2 items-end';
+  }
+
+  return vertical > 0
+    ? 'left-1/2 top-full mt-1 -translate-x-1/2 items-center'
+    : 'bottom-full left-1/2 mb-1 -translate-x-1/2 items-center';
+}
+
 export function NutrientView({ activeRegion }: { activeRegion: Region | "All" }) {
   const shouldReduceMotion = useReducedMotion();
   const [activeMetric, setActiveMetric] = useState<NutrientKey>('protein');
@@ -129,6 +144,7 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
             const value = ingredient.nutrients[activeMetric];
             const isActive = activeNode?.id === ingredient.id;
             const nodeSize = 12 + (value / PROTOTYPE_INDEX_RANGES.nutrientMetrics.max) * 20; // 12px to 32px
+            const labelPlacement = getRadialLabelPlacement(pos.x, pos.y);
 
             return (
               <Motion.button
@@ -141,7 +157,7 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
                 }}
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                 style={{ zIndex: isActive ? sortedIngredients.length + 10 : sortedIngredients.length - i }}
-                className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-10 min-w-11 min-h-11 bg-transparent border-0 p-0"
+                className="absolute z-10 min-h-11 min-w-11 -translate-x-1/2 -translate-y-1/2 cursor-pointer border-0 bg-transparent p-0"
                 onMouseEnter={() => setHoveredNode(ingredient)}
                 onMouseLeave={() => setHoveredNode(null)}
                 onFocus={() => setHoveredNode(ingredient)}
@@ -150,11 +166,11 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
                 aria-pressed={selectedNode?.id === ingredient.id}
                 aria-label={`${ingredient.name}. ${currentMetricConfig.label}: ${value}. Select for complete nutrient details.`}
               >
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center justify-center">
                   <Motion.div
                     animate={shouldReduceMotion ? undefined : { y: [0, -3, 3, 0] }}
                     transition={shouldReduceMotion ? undefined : { duration: 3 + (i % 3), repeat: Infinity, ease: "easeInOut" }}
-                    className="flex flex-col items-center gap-1.5"
+                    className="relative flex h-11 w-11 items-center justify-center"
                   >
                     <div 
                       className="rounded-full border-2 border-white/60 shadow-lg transition-all duration-300"
@@ -165,55 +181,72 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
                         boxShadow: isActive ? `0 0 20px ${ingredient.color}60` : undefined,
                       }}
                     />
-                    <span className={`font-['Space_Grotesk'] text-[10px] tracking-widest uppercase font-semibold bg-white/80 backdrop-blur-md px-2 py-0.5 rounded border border-black/5 transition-all duration-300 whitespace-nowrap ${isActive ? 'text-black shadow-md' : 'text-black/65'}`}>
-                      {ingredient.name}
-                    </span>
-                    {/* Value badge */}
-                    <span 
-                      className="text-[9px] font-semibold tabular-nums px-1.5 py-0.5 rounded-full"
-                      style={{ backgroundColor: currentMetricConfig.color + '20', color: currentMetricConfig.color }}
-                    >
-                      {value}
-                    </span>
+                    {isActive && (
+                      <div className={`absolute ${labelPlacement} flex whitespace-nowrap transition-all duration-300`}>
+                        <span className="rounded border border-black/5 bg-white/90 px-2 py-0.5 font-['Space_Grotesk'] text-[10px] font-semibold uppercase tracking-widest text-black shadow-md backdrop-blur-md">
+                          {ingredient.name}
+                        </span>
+                        <span
+                          className="mt-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold tabular-nums"
+                          style={{ backgroundColor: currentMetricConfig.color + '20', color: currentMetricConfig.color }}
+                        >
+                          {value}
+                        </span>
+                      </div>
+                    )}
                   </Motion.div>
 
-                  {/* Hover Detail */}
-                  <AnimatePresence>
-                    {isActive && (
-                      <Motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 5 }}
-                        className="absolute top-full mt-3 w-44 bg-white/95 backdrop-blur-xl border border-black/10 rounded-xl p-3 shadow-xl pointer-events-none z-50"
-                      >
-                        <div className="grid grid-cols-2 gap-2">
-                          {METRICS.map((m) => (
-                            <div key={m.key} className="flex flex-col">
-                              <span className="text-[9px] uppercase tracking-widest font-semibold text-black/50">{m.label.split(' ')[0]}</span>
-                              <div className="flex items-center gap-1 mt-1">
-                                <div className="flex-1 h-1 bg-black/5 rounded-full overflow-hidden">
-                                  <div
-                                    className="h-full rounded-full"
-                                    style={{
-                                      width: `${(ingredient.nutrients[m.key] / PROTOTYPE_INDEX_RANGES.nutrientMetrics.max) * 100}%`,
-                                      backgroundColor: m.color,
-                                    }}
-                                  />
-                                </div>
-                                <span className="text-[9px] font-semibold tabular-nums">{ingredient.nutrients[m.key]}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </Motion.div>
-                    )}
-                  </AnimatePresence>
                 </div>
               </Motion.button>
             );
           })}
         </div>
       </div>
+
+      <div className="relative z-20 grid grid-cols-2 gap-2 lg:absolute lg:left-10 lg:top-[54%] lg:w-[360px]">
+        {sortedIngredients.map((ingredient) => (
+          <div key={ingredient.id} className="flex min-w-0 items-center gap-2 rounded-lg border border-black/5 bg-white/55 px-2.5 py-2">
+            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: ingredient.color }} />
+            <span className="min-w-0 flex-1 truncate text-[9px] font-semibold uppercase tracking-wider text-black/60">{ingredient.name}</span>
+            <span className="shrink-0 text-[9px] font-semibold tabular-nums" style={{ color: currentMetricConfig.color }}>
+              {ingredient.nutrients[activeMetric]}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Selected nutrient detail stays outside the dense radial field. */}
+      <AnimatePresence>
+        {activeNode && (
+          <Motion.div
+            key={activeNode.id}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 5 }}
+            className="relative z-20 mx-auto mt-3 w-full max-w-sm rounded-xl border border-black/10 bg-white/95 p-3 shadow-xl backdrop-blur-xl pointer-events-none lg:absolute lg:right-10 lg:top-[54%] lg:mx-0 lg:mt-0 lg:w-44"
+          >
+            <div className="grid grid-cols-2 gap-2">
+              {METRICS.map((metric) => (
+                <div key={metric.key} className="flex flex-col">
+                  <span className="text-[9px] font-semibold uppercase tracking-widest text-black/50">{metric.label.split(' ')[0]}</span>
+                  <div className="mt-1 flex items-center gap-1">
+                    <div className="h-1 flex-1 overflow-hidden rounded-full bg-black/5">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${(activeNode.nutrients[metric.key] / PROTOTYPE_INDEX_RANGES.nutrientMetrics.max) * 100}%`,
+                          backgroundColor: metric.color,
+                        }}
+                      />
+                    </div>
+                    <span className="text-[9px] font-semibold tabular-nums">{activeNode.nutrients[metric.key]}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

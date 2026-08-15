@@ -79,7 +79,7 @@ test('Source Map context is available through keyboard focus', async ({ page }) 
   await node.focus();
 
   await expect(node).toBeFocused();
-  await expect(node.getByText('Lowland cultivation, loam soils of the Willamette basin')).toBeVisible();
+  await expect(page.getByText('Lowland cultivation, loam soils of the Willamette basin')).toBeVisible();
 });
 
 test('Nutrient View exposes selected metric details without hover', async ({ page }) => {
@@ -91,7 +91,7 @@ test('Nutrient View exposes selected metric details without hover', async ({ pag
   await node.click();
 
   await expect(node).toHaveAttribute('aria-pressed', 'true');
-  await expect(node.getByText('Mineral', { exact: true })).toBeVisible();
+  await expect(page.getByText('Mineral', { exact: true })).toBeVisible();
 });
 
 test.describe('reduced motion', () => {
