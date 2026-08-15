@@ -140,6 +140,7 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
                   scale: isActive ? 1.2 : 1,
                 }}
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                style={{ zIndex: isActive ? sortedIngredients.length + 10 : sortedIngredients.length - i }}
                 className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-10 min-w-11 min-h-11 bg-transparent border-0 p-0"
                 onMouseEnter={() => setHoveredNode(ingredient)}
                 onMouseLeave={() => setHoveredNode(null)}

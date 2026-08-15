@@ -5,8 +5,12 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
+    "check": "npm run typecheck && npm run test:unit && npm run build",
     "dev": "vite",
     "preview": "vite preview",
+    "test": "npm run test:unit",
+    "test:e2e": "playwright test",
+    "test:unit": "vitest run tests/unit",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -16,6 +20,7 @@
     "react-dom": "18.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.62.1",
     "@tailwindcss/vite": "4.1.12",
     "@types/node": "24.13.3",
     "@types/react": "18.3.31",
@@ -23,7 +28,8 @@
     "@vitejs/plugin-react": "4.7.0",
     "tailwindcss": "4.1.12",
     "typescript": "7.0.2",
-    "vite": "6.3.5"
+    "vite": "6.3.5",
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": "^18.0.0 || ^20.0.0 || >=22.0.0"

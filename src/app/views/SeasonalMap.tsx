@@ -107,6 +107,7 @@ export function SeasonalMap({ activeRegion }: { activeRegion: Region | "All" }) 
 
           {/* Time Sweep Indicator */}
           <div 
+            data-testid="seasonal-sweep"
             className="absolute top-0 bottom-0 w-[1px] bg-[#e76f51]/30 z-10 pointer-events-none transition-all duration-[1800ms] ease-linear"
             style={{ left: `calc(200px + (100% - 200px) * ${(sweepMonth + 0.5) / 12})` }}
           >
