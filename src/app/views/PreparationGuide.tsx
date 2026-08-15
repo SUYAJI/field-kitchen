@@ -1,18 +1,23 @@
 import { useMemo, useState } from "react";
 import { motion as Motion, AnimatePresence } from "motion/react";
-import { INGREDIENTS, Region, PrepMethod } from "../data";
+import { INGREDIENTS, PREPARATION_METHODS, Region, PrepMethod } from "../data";
 import { Flame, Droplets, Beaker, Sprout, Wind, Check } from "lucide-react";
 
-const PREP_METHODS: { id: PrepMethod; label: string; icon: any }[] = [
-  { id: 'Roasted', label: 'Roast', icon: Flame },
-  { id: 'Steamed', label: 'Steam', icon: Droplets },
-  { id: 'Fermented', label: 'Ferment', icon: Beaker },
-  { id: 'Simmered', label: 'Simmer', icon: Droplets },
-  { id: 'Raw', label: 'Raw', icon: Sprout },
-  { id: 'Pickled', label: 'Pickle', icon: Beaker },
-  { id: 'Ground', label: 'Grind', icon: Wind },
-  { id: 'Soaked', label: 'Soak', icon: Droplets },
-];
+const PREP_METHOD_ICONS: Record<PrepMethod, any> = {
+  Roasted: Flame,
+  Steamed: Droplets,
+  Fermented: Beaker,
+  Simmered: Droplets,
+  Raw: Sprout,
+  Pickled: Beaker,
+  Ground: Wind,
+  Soaked: Droplets,
+};
+
+const PREP_METHODS = PREPARATION_METHODS.map((method) => ({
+  ...method,
+  icon: PREP_METHOD_ICONS[method.id],
+}));
 
 type ViewMode = 'cards' | 'matrix';
 

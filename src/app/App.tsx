@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion as Motion, AnimatePresence } from "motion/react";
-import { Region } from "./data";
+import { REGIONS, Region } from "./data";
 import { IngredientLibrary } from "./views/IngredientLibrary";
 import { SeasonalMap } from "./views/SeasonalMap";
 import { SourceMap } from "./views/SourceMap";
@@ -15,7 +15,7 @@ export default function App() {
   const [activeView, setActiveView] = useState<ViewMode>("LANDING");
   const [activeRegion, setActiveRegion] = useState<Region | "All">("All");
 
-  const regions: (Region | "All")[] = ["All", "Willamette Valley", "Puget Sound", "Olympic Peninsula", "Cascade Range"];
+  const regions: (Region | "All")[] = ["All", ...REGIONS];
   const views: { id: ViewMode; label: string }[] = [
     { id: "LIBRARY", label: "Ingredient Library" },
     { id: "PAIRING", label: "Pairing Field" },

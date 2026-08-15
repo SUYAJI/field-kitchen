@@ -1,15 +1,18 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion as Motion, AnimatePresence } from "motion/react";
-import { INGREDIENTS, Region, Ingredient } from "../data";
+import { INGREDIENTS, Region, Ingredient, NUTRIENT_METRICS, NutrientKey, PROTOTYPE_INDEX_RANGES } from "../data";
 
-type NutrientKey = 'protein' | 'mineral' | 'fiber' | 'digestibility';
+const METRIC_COLORS: Record<NutrientKey, string> = {
+  protein: '#e76f51',
+  mineral: '#2a9d8f',
+  fiber: '#f4a261',
+  digestibility: '#e9c46a',
+};
 
-const METRICS: { key: NutrientKey; label: string; color: string }[] = [
-  { key: 'protein', label: 'Protein Density', color: '#e76f51' },
-  { key: 'mineral', label: 'Mineral Profile', color: '#2a9d8f' },
-  { key: 'fiber', label: 'Fiber Structure', color: '#f4a261' },
-  { key: 'digestibility', label: 'Digestibility Index', color: '#e9c46a' },
-];
+const METRICS = NUTRIENT_METRICS.map((metric) => ({
+  ...metric,
+  color: METRIC_COLORS[metric.key],
+}));
 
 export function NutrientView({ activeRegion }: { activeRegion: Region | "All" }) {
   const [activeMetric, setActiveMetric] = useState<NutrientKey>('protein');
@@ -20,6 +23,12 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
       (item) => activeRegion === "All" || item.region.includes(activeRegion as Region)
     );
   }, [activeRegion]);
+
+  useEffect(() => {
+    if (hoveredNode && !filteredIngredients.some((ingredient) => ingredient.id === hoveredNode.id)) {
+      setHoveredNode(null);
+    }
+  }, [filteredIngredients, hoveredNode]);
 
   const currentMetricConfig = METRICS.find(m => m.key === activeMetric)!;
 
@@ -32,7 +41,7 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
   const getPosition = (ingredient: Ingredient, index: number, total: number) => {
     const value = ingredient.nutrients[activeMetric];
     // Higher value = closer to center
-    const normalizedDistance = 1 - (value / 100);
+    const normalizedDistance = 1 - (value / PROTOTYPE_INDEX_RANGES.nutrientMetrics.max);
     const radius = 10 + normalizedDistance * 35; // 10% to 45% from center
     const angle = (index / total) * Math.PI * 2 - Math.PI / 2;
     const seed = ingredient.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -110,7 +119,7 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
             const pos = getPosition(ingredient, i, sortedIngredients.length);
             const value = ingredient.nutrients[activeMetric];
             const isHovered = hoveredNode?.id === ingredient.id;
-            const nodeSize = 12 + (value / 100) * 20; // 12px to 32px
+            const nodeSize = 12 + (value / PROTOTYPE_INDEX_RANGES.nutrientMetrics.max) * 20; // 12px to 32px
 
             return (
               <Motion.div
@@ -167,7 +176,13 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
                               <span className="text-[8px] uppercase tracking-widest font-semibold text-black/40">{m.label.split(' ')[0]}</span>
                               <div className="flex items-center gap-1 mt-1">
                                 <div className="flex-1 h-1 bg-black/5 rounded-full overflow-hidden">
-                                  <div className="h-full rounded-full" style={{ width: `${ingredient.nutrients[m.key]}%`, backgroundColor: m.color }} />
+                                  <div
+                                    className="h-full rounded-full"
+                                    style={{
+                                      width: `${(ingredient.nutrients[m.key] / PROTOTYPE_INDEX_RANGES.nutrientMetrics.max) * 100}%`,
+                                      backgroundColor: m.color,
+                                    }}
+                                  />
                                 </div>
                                 <span className="text-[9px] font-semibold tabular-nums">{ingredient.nutrients[m.key]}</span>
                               </div>

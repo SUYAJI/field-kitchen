@@ -1,54 +1,29 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { motion as Motion, AnimatePresence } from "motion/react";
-import { INGREDIENTS, Ingredient, Region, PrepMethod } from "../data";
+import { getPairingStrength, INGREDIENTS, Ingredient, PairingStrength, PREPARATION_METHODS, Region, PrepMethod } from "../data";
 import { Flame, Droplets, Beaker, Sprout, Wind } from "lucide-react";
 
-const PREP_METHODS: { id: PrepMethod; label: string; icon: any }[] = [
-  { id: 'Roasted', label: 'Roast', icon: Flame },
-  { id: 'Steamed', label: 'Steam', icon: Droplets },
-  { id: 'Fermented', label: 'Ferment', icon: Beaker },
-  { id: 'Simmered', label: 'Simmer', icon: Droplets },
-  { id: 'Raw', label: 'Raw', icon: Sprout },
-  { id: 'Pickled', label: 'Pickle', icon: Beaker },
-  { id: 'Ground', label: 'Grind', icon: Wind },
-  { id: 'Soaked', label: 'Soak', icon: Droplets },
-];
+const PREP_METHOD_ICONS: Record<PrepMethod, any> = {
+  Roasted: Flame,
+  Steamed: Droplets,
+  Fermented: Beaker,
+  Simmered: Droplets,
+  Raw: Sprout,
+  Pickled: Beaker,
+  Ground: Wind,
+  Soaked: Droplets,
+};
 
-type PairingStrength = 'strong' | 'medium' | 'experimental' | null;
+const PREP_METHODS = PREPARATION_METHODS.map((method) => ({
+  ...method,
+  icon: PREP_METHOD_ICONS[method.id],
+}));
 
 const STRENGTH_CONFIG: Record<Exclude<PairingStrength, null>, { label: string; opacity: number; glow: number; lineWidth: number; color: string }> = {
   strong:       { label: 'Strong Pairing',  opacity: 1,    glow: 12, lineWidth: 2.5, color: 'rgba(255,255,255,0.9)' },
   medium:       { label: 'Medium Pairing',  opacity: 0.85, glow: 6,  lineWidth: 1.5, color: 'rgba(255,255,255,0.6)' },
   experimental: { label: 'Experimental',    opacity: 0.6,  glow: 0,  lineWidth: 0.8, color: 'rgba(255,255,255,0.35)' },
 };
-
-function nameMatch(name: string, pairingStr: string): boolean {
-  const n = name.toLowerCase();
-  const p = pairingStr.toLowerCase();
-  return n.includes(p) || p.includes(n);
-}
-
-function getPairingStrength(selected: Ingredient, other: Ingredient): PairingStrength {
-  if (selected.id === other.id) return null;
-  
-  const selectedListsOther = selected.pairings.some(p => nameMatch(other.name, p));
-  const otherListsSelected = other.pairings.some(p => nameMatch(selected.name, p));
-  const sharedPreps = selected.preparations.filter(p => other.preparations.includes(p)).length;
-  
-  if (selectedListsOther && otherListsSelected) {
-    // Bidirectional — strength depends on shared preparation overlap
-    return sharedPreps >= 2 ? 'strong' : 'medium';
-  }
-  if (selectedListsOther || otherListsSelected) {
-    // Unidirectional pairing
-    return 'medium';
-  }
-  if (sharedPreps >= 2) {
-    // No explicit pairing but significant technique overlap
-    return 'experimental';
-  }
-  return null;
-}
 
 export function PairingField({ activeRegion }: { activeRegion: Region | "All" }) {
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
@@ -60,6 +35,12 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
   const filteredIngredients = useMemo(() => {
     return INGREDIENTS.filter(
       (item) => activeRegion === "All" || item.region.includes(activeRegion as Region)
+    );
+  }, [activeRegion]);
+
+  useEffect(() => {
+    setSelectedIngredient((current) =>
+      current && activeRegion !== "All" && !current.region.includes(activeRegion) ? null : current
     );
   }, [activeRegion]);
 

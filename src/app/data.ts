@@ -1,7 +1,48 @@
-export type Region = 'Willamette Valley' | 'Puget Sound' | 'Olympic Peninsula' | 'Cascade Range';
-export type Season = 'Spring' | 'Summer' | 'Autumn' | 'Winter';
-export type SourceLayer = 'Local' | 'Regional' | 'Imported' | 'Wild Foraged';
-export type PrepMethod = 'Raw' | 'Roasted' | 'Fermented' | 'Simmered' | 'Steamed' | 'Pickled' | 'Ground' | 'Soaked';
+export const REGIONS = ['Willamette Valley', 'Puget Sound', 'Olympic Peninsula', 'Cascade Range'] as const;
+export type Region = (typeof REGIONS)[number];
+
+export const SEASONS = ['Spring', 'Summer', 'Autumn', 'Winter'] as const;
+export type Season = (typeof SEASONS)[number];
+
+export const SUPPORTED_SOURCE_LAYERS = ['Local', 'Regional', 'Imported', 'Wild Foraged'] as const;
+export type SourceLayer = (typeof SUPPORTED_SOURCE_LAYERS)[number];
+
+export const PREPARATION_METHODS = [
+  { id: 'Roasted', label: 'Roast' },
+  { id: 'Steamed', label: 'Steam' },
+  { id: 'Fermented', label: 'Ferment' },
+  { id: 'Simmered', label: 'Simmer' },
+  { id: 'Raw', label: 'Raw' },
+  { id: 'Pickled', label: 'Pickle' },
+  { id: 'Ground', label: 'Grind' },
+  { id: 'Soaked', label: 'Soak' },
+] as const;
+export type PrepMethod = (typeof PREPARATION_METHODS)[number]['id'];
+
+export const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
+export const MONTH_INITIALS = MONTHS.map((month) => month[0]);
+
+// Field Kitchen's internal season model uses zero-based month indices.
+export const SEASON_MONTHS: Record<Season, readonly number[]> = {
+  Spring: [2, 3, 4],
+  Summer: [5, 6, 7],
+  Autumn: [8, 9, 10],
+  Winter: [11, 0, 1],
+};
+
+export const NUTRIENT_METRICS = [
+  { key: 'protein', label: 'Protein Density' },
+  { key: 'mineral', label: 'Mineral Profile' },
+  { key: 'fiber', label: 'Fiber Structure' },
+  { key: 'digestibility', label: 'Digestibility Index' },
+] as const;
+export type NutrientKey = (typeof NUTRIENT_METRICS)[number]['key'];
+
+// These ranges describe the prototype visualization model, not physical units.
+export const PROTOTYPE_INDEX_RANGES = {
+  nutrientDensity: { min: 1, max: 10 },
+  nutrientMetrics: { min: 0, max: 100 },
+} as const;
 
 export interface Ingredient {
   id: string;
@@ -11,18 +52,13 @@ export interface Ingredient {
   seasons: Season[];
   region: Region[];
   originTag: string;
-  nutrientDensity: number; // 1-10
+  nutrientDensity: number; // Illustrative prototype index, expected range 1-10
   preparations: PrepMethod[];
   harvestWindow: [number, number]; // 0-11 for Jan-Dec
   pairings: string[];
   localPriority: 'High' | 'Medium' | 'Low';
   sourceLayer: SourceLayer;
-  nutrients: {
-    protein: number; // 1-100
-    mineral: number;
-    fiber: number;
-    digestibility: number;
-  };
+  nutrients: Record<NutrientKey, number>; // Normalized illustrative indices, expected range 0-100
 }
 
 export const INGREDIENTS: Ingredient[] = [
@@ -79,7 +115,7 @@ export const INGREDIENTS: Ingredient[] = [
     name: 'Filbert Hazelnut',
     color: '#bc6c25',
     image: 'https://images.unsplash.com/photo-1715861696705-67ccf052baf5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyYXclMjBoYXplbG51dHN8ZW58MXx8fHwxNzc2NDY2ODg4fDA&ixlib=rb-4.1.0&q=80&w=1080',
-    seasons: ['Autumn', 'Winter'],
+    seasons: ['Autumn'],
     region: ['Willamette Valley'],
     originTag: 'Valley Orchard',
     nutrientDensity: 10,
@@ -155,3 +191,106 @@ export const INGREDIENTS: Ingredient[] = [
     nutrients: { protein: 35, mineral: 95, fiber: 50, digestibility: 85 },
   }
 ];
+
+// Pairing labels are presentation-oriented prototype inputs. This explicit map
+// avoids ambiguous substring matching while preserving the current schema.
+const PAIRING_LABEL_TO_INGREDIENT_ID: Readonly<Record<string, string>> = {
+  'Chanterelle': 'chanterelle',
+  'Huckleberry': 'huckleberry',
+  'Fiddlehead': 'fiddlehead',
+  'Hazelnut': 'hazelnut',
+  'Walla Walla Onion': 'walla-walla',
+  'Rhubarb': 'rhubarb',
+  'Douglas Fir': 'douglas-fir',
+  'Bull Kelp': 'bull-kelp',
+};
+
+export function getIngredientByPairingLabel(label: string): Ingredient | undefined {
+  const targetId = PAIRING_LABEL_TO_INGREDIENT_ID[label];
+  return targetId
+    ? INGREDIENTS.find((ingredient) => ingredient.id === targetId)
+    : INGREDIENTS.find((ingredient) => ingredient.name === label);
+}
+
+export function ingredientListsPairing(source: Ingredient, target: Ingredient): boolean {
+  return source.pairings.some((label) => getIngredientByPairingLabel(label)?.id === target.id);
+}
+
+export type PairingStrength = 'strong' | 'medium' | 'experimental' | null;
+export type PairingBasis = 'bidirectional' | 'unidirectional' | 'preparation-overlap' | null;
+
+export interface PairingAssessment {
+  strength: PairingStrength;
+  basis: PairingBasis;
+  sharedPreparationCount: number;
+}
+
+export function assessPairing(selected: Ingredient, other: Ingredient): PairingAssessment {
+  if (selected.id === other.id) {
+    return { strength: null, basis: null, sharedPreparationCount: 0 };
+  }
+
+  const selectedListsOther = ingredientListsPairing(selected, other);
+  const otherListsSelected = ingredientListsPairing(other, selected);
+  const sharedPreparationCount = selected.preparations.filter((method) =>
+    other.preparations.includes(method)
+  ).length;
+
+  if (selectedListsOther && otherListsSelected) {
+    return {
+      strength: sharedPreparationCount >= 2 ? 'strong' : 'medium',
+      basis: 'bidirectional',
+      sharedPreparationCount,
+    };
+  }
+
+  if (selectedListsOther || otherListsSelected) {
+    return { strength: 'medium', basis: 'unidirectional', sharedPreparationCount };
+  }
+
+  if (sharedPreparationCount >= 2) {
+    return { strength: 'experimental', basis: 'preparation-overlap', sharedPreparationCount };
+  }
+
+  return { strength: null, basis: null, sharedPreparationCount };
+}
+
+export function getPairingStrength(selected: Ingredient, other: Ingredient): PairingStrength {
+  return assessPairing(selected, other).strength;
+}
+
+function getUniqueUndirectedPairingCount(ingredients: readonly Ingredient[]): number {
+  const uniqueRelationships = new Set<string>();
+
+  for (const ingredient of ingredients) {
+    for (const label of ingredient.pairings) {
+      const target = getIngredientByPairingLabel(label);
+      if (target) {
+        uniqueRelationships.add([ingredient.id, target.id].sort().join('::'));
+      }
+    }
+  }
+
+  return uniqueRelationships.size;
+}
+
+export const ACTIVE_SOURCE_LAYERS = SUPPORTED_SOURCE_LAYERS.filter((layer) =>
+  INGREDIENTS.some((ingredient) => ingredient.sourceLayer === layer)
+);
+
+export const DATASET_SUMMARY = {
+  ingredientCount: INGREDIENTS.length,
+  regionCount: REGIONS.length,
+  preparationMethodCount: PREPARATION_METHODS.length,
+  preparationAssignmentCount: INGREDIENTS.reduce(
+    (total, ingredient) => total + ingredient.preparations.length,
+    0
+  ),
+  directedPairingCount: INGREDIENTS.reduce(
+    (total, ingredient) => total + ingredient.pairings.length,
+    0
+  ),
+  uniqueUndirectedPairingCount: getUniqueUndirectedPairingCount(INGREDIENTS),
+  nutrientAxisCount: NUTRIENT_METRICS.length,
+  seasonalWindowCount: INGREDIENTS.filter((ingredient) => ingredient.harvestWindow.length === 2).length,
+} as const;

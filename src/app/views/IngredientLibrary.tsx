@@ -1,11 +1,9 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion as Motion, AnimatePresence } from "motion/react";
 import { X, Calendar, Flame, Droplets, Beaker, Sprout, Wind, Link2, MapPin, Leaf } from "lucide-react";
-import { INGREDIENTS, Ingredient, Region } from "../data";
+import { getIngredientByPairingLabel, INGREDIENTS, Ingredient, MONTH_INITIALS, PrepMethod, Region } from "../data";
 
-const MONTHS_SHORT = ['J','F','M','A','M','J','J','A','S','O','N','D'];
-
-const PrepIcon = ({ type, className }: { type: string; className?: string }) => {
+const PrepIcon = ({ type, className }: { type: PrepMethod; className?: string }) => {
   switch (type) {
     case 'Roasted': return <Flame className={`w-3.5 h-3.5 ${className}`} />;
     case 'Steamed': return <Droplets className={`w-3.5 h-3.5 ${className}`} />;
@@ -27,6 +25,12 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
       (item) => activeRegion === "All" || item.region.includes(activeRegion as Region)
     );
   }, [activeRegion]);
+
+  useEffect(() => {
+    if (selectedIngredient && !filteredIngredients.some((ingredient) => ingredient.id === selectedIngredient.id)) {
+      setSelectedIngredient(null);
+    }
+  }, [filteredIngredients, selectedIngredient]);
 
   return (
     <div className="w-full h-full flex overflow-hidden relative">
@@ -171,7 +175,7 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                           className="flex-1 h-full origin-bottom flex items-end justify-center"
                           style={{ backgroundColor: isActive ? selectedIngredient.color : 'transparent' }}
                         >
-                          <span className="text-[7px] font-semibold text-black/20 mb-0.5">{MONTHS_SHORT[i]}</span>
+                          <span className="text-[7px] font-semibold text-black/20 mb-0.5">{MONTH_INITIALS[i]}</span>
                         </Motion.div>
                       );
                     })}
@@ -185,7 +189,7 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                   </span>
                   <div className="flex flex-wrap gap-2">
                     {selectedIngredient.pairings.map((p) => {
-                      const paired = INGREDIENTS.find(ing => ing.name.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(ing.name.toLowerCase()));
+                      const paired = getIngredientByPairingLabel(p);
                       return (
                         <button
                           key={p}

@@ -1,24 +1,35 @@
 import { useState } from "react";
 import { motion as Motion, AnimatePresence } from "motion/react";
 import { ArrowRight, X, Database } from "lucide-react";
+import {
+  ACTIVE_SOURCE_LAYERS,
+  DATASET_SUMMARY,
+  INGREDIENTS,
+  MONTHS,
+  NUTRIENT_METRICS,
+  PREPARATION_METHODS,
+  REGIONS,
+  SEASON_MONTHS,
+  SEASONS,
+  SUPPORTED_SOURCE_LAYERS,
+} from "../data";
 
-const DATASET_INFO = {
-  ingredients: 8,
-  regions: 4,
-  techniques: 7,
-  nutrientAxes: 4,
-  pairingRelationships: 12,
-  seasonalWindows: 8,
-  details: [
-    { label: "Primary Ingredients", value: "Chanterelle, Huckleberry, Fiddlehead Fern, Filbert Hazelnut, Walla Walla Onion, Rhubarb, Douglas Fir Tips, Bull Kelp" },
-    { label: "Ecological Regions", value: "Willamette Valley, Puget Sound, Olympic Peninsula, Cascade Range" },
-    { label: "Preparation Techniques", value: "Roast, Steam, Ferment, Simmer, Raw, Pickle, Grind, Soak" },
-    { label: "Nutrient Axes", value: "Protein Density, Mineral Profile, Fiber Structure, Digestibility Index" },
-    { label: "Source Layers", value: "Local, Regional, Wild Foraged, Imported" },
-    { label: "Seasonal Windows", value: "Spring (Mar–May), Summer (Jun–Aug), Autumn (Sep–Nov), Winter (Dec–Feb)" },
-    { label: "Habitat Contexts", value: "Forest Floor, Subalpine Scrub, Riparian Zone, Valley Orchard, Volcanic Soil, Canopy Layer, Cool Soil, Coastal Tide" },
-  ],
-};
+const DATASET_DETAILS = [
+  { label: "Primary Ingredients", value: INGREDIENTS.map((ingredient) => ingredient.name).join(', ') },
+  { label: "Ecological Regions", value: REGIONS.join(', ') },
+  { label: "Preparation Techniques", value: PREPARATION_METHODS.map((method) => method.label).join(', ') },
+  { label: "Nutrient Axes", value: NUTRIENT_METRICS.map((metric) => metric.label).join(', ') },
+  { label: "Supported Source Layers", value: SUPPORTED_SOURCE_LAYERS.join(', ') },
+  { label: "Active Source Layers", value: ACTIVE_SOURCE_LAYERS.join(', ') },
+  {
+    label: "Seasonal Windows",
+    value: SEASONS.map((season) => {
+      const months = SEASON_MONTHS[season];
+      return `${season} (${MONTHS[months[0]]}–${MONTHS[months[months.length - 1]]})`;
+    }).join(', '),
+  },
+  { label: "Habitat Contexts", value: [...new Set(INGREDIENTS.map((ingredient) => ingredient.originTag))].join(', ') },
+];
 
 export function LandingPage({ onEnter }: { onEnter: () => void }) {
   const [datasetOpen, setDatasetOpen] = useState(false);
@@ -82,7 +93,7 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
               FIELD KITCHEN is a spatial ingredient intelligence interface designed to help cooks and researchers explore seasonal availability, regional sourcing relationships, and preparation compatibility across Pacific Northwest food systems.
             </p>
             <p className="font-['Space_Grotesk'] text-sm md:text-base leading-relaxed text-black/40 mb-8">
-              Navigate harvest windows, nutrient topographies, and technique-driven compatibility networks across four bioregions and eight primary ingredients.
+              Navigate harvest windows, nutrient topographies, and technique-driven compatibility networks across {DATASET_SUMMARY.regionCount} bioregions and {DATASET_SUMMARY.ingredientCount} primary ingredients.
             </p>
             
             <div className="flex flex-col gap-4">
@@ -114,7 +125,7 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
         >
           <div className="space-y-2">
             <div className="text-[10px] uppercase tracking-[0.2em] font-semibold text-black/40">Region Index</div>
-            {["Willamette Valley", "Puget Sound", "Olympic Peninsula", "Cascade Range"].map((r, i) => (
+            {REGIONS.map((r, i) => (
               <Motion.div 
                 key={r}
                 initial={{ opacity: 0, x: 10 }}
@@ -131,10 +142,10 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
             <div className="text-[10px] uppercase tracking-[0.2em] font-semibold text-black/40">System Metadata</div>
             <div className="flex flex-col gap-1.5">
               {[
-                { label: "Active Nodes", value: "8" },
-                { label: "Technique Relationships", value: "32" },
-                { label: "Pairing Connections", value: "12" },
-                { label: "Nutrient Axes", value: "4" },
+                { label: "Active Nodes", value: DATASET_SUMMARY.ingredientCount },
+                { label: "Technique Assignments", value: DATASET_SUMMARY.preparationAssignmentCount },
+                { label: "Pairing Connections", value: DATASET_SUMMARY.uniqueUndirectedPairingCount },
+                { label: "Nutrient Axes", value: DATASET_SUMMARY.nutrientAxisCount },
               ].map((item, i) => (
                 <Motion.div
                   key={item.label}
@@ -186,12 +197,12 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
                 {/* Summary Stats */}
                 <div className="grid grid-cols-3 gap-4 mb-10">
                   {[
-                    { n: DATASET_INFO.ingredients, l: "Ingredients" },
-                    { n: DATASET_INFO.regions, l: "Regions" },
-                    { n: DATASET_INFO.techniques, l: "Techniques" },
-                    { n: DATASET_INFO.nutrientAxes, l: "Nutrient Axes" },
-                    { n: DATASET_INFO.pairingRelationships, l: "Pairings" },
-                    { n: DATASET_INFO.seasonalWindows, l: "Seasonal Windows" },
+                    { n: DATASET_SUMMARY.ingredientCount, l: "Ingredients" },
+                    { n: DATASET_SUMMARY.regionCount, l: "Regions" },
+                    { n: DATASET_SUMMARY.preparationMethodCount, l: "Techniques" },
+                    { n: DATASET_SUMMARY.nutrientAxisCount, l: "Nutrient Axes" },
+                    { n: DATASET_SUMMARY.uniqueUndirectedPairingCount, l: "Pairings" },
+                    { n: DATASET_SUMMARY.seasonalWindowCount, l: "Seasonal Windows" },
                   ].map((s, i) => (
                     <Motion.div
                       key={s.l}
@@ -208,7 +219,7 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
 
                 {/* Detailed Breakdown */}
                 <div className="space-y-6">
-                  {DATASET_INFO.details.map((d, i) => (
+                  {DATASET_DETAILS.map((d, i) => (
                     <Motion.div
                       key={d.label}
                       initial={{ opacity: 0, x: -10 }}
@@ -225,7 +236,7 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
                 <div className="mt-10 p-5 bg-[#2a9d8f]/5 border border-[#2a9d8f]/10 rounded-xl">
                   <div className="text-[10px] uppercase tracking-widest font-semibold text-[#2a9d8f]/60 mb-2">Data Provenance</div>
                   <p className="text-xs text-black/50 leading-relaxed">
-                    All ingredient data reflects Pacific Northwest seasonal availability patterns. Harvest windows, nutrient profiles, and pairing relationships are modeled from regional agricultural and foraging knowledge systems. This is a design prototype dataset.
+                    This prototype dataset uses modeled, illustrative values for harvest windows, nutrient profiles, sourcing, and pairing relationships. It demonstrates the interface and does not yet include field-level provenance or citations.
                   </p>
                 </div>
               </div>

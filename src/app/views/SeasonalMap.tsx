@@ -1,10 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion as Motion, AnimatePresence } from "motion/react";
-import { INGREDIENTS, Ingredient, Season, Region } from "../data";
+import { INGREDIENTS, Ingredient, MONTH_INITIALS, MONTHS, SEASONS, Season, Region } from "../data";
 import { X, Calendar } from "lucide-react";
-
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const SEASONS: Season[] = ['Spring', 'Summer', 'Autumn', 'Winter'];
 
 export function SeasonalMap({ activeRegion }: { activeRegion: Region | "All" }) {
   const [activeSeason, setActiveSeason] = useState<Season | "All">("All");
@@ -27,6 +24,17 @@ export function SeasonalMap({ activeRegion }: { activeRegion: Region | "All" }) 
       return matchRegion && matchSeason;
     });
   }, [activeRegion, activeSeason]);
+
+  useEffect(() => {
+    const visibleIds = new Set(filteredIngredients.map((ingredient) => ingredient.id));
+
+    if (hoveredIngredient && !visibleIds.has(hoveredIngredient)) {
+      setHoveredIngredient(null);
+    }
+    if (selectedDetail && !visibleIds.has(selectedDetail.id)) {
+      setSelectedDetail(null);
+    }
+  }, [filteredIngredients, hoveredIngredient, selectedDetail]);
 
   return (
     <div className="w-full h-full flex flex-col p-6 md:p-10 relative overflow-hidden">
@@ -168,7 +176,7 @@ export function SeasonalMap({ activeRegion }: { activeRegion: Region | "All" }) 
                   })}
                 </div>
                 <div className="flex justify-between text-[8px] uppercase tracking-widest text-black/25 mt-1 px-0.5">
-                  {MONTHS.map(m => <span key={m}>{m[0]}</span>)}
+                  {MONTHS.map((month, index) => <span key={month}>{MONTH_INITIALS[index]}</span>)}
                 </div>
               </div>
               <div className="flex gap-3 text-[10px] uppercase tracking-widest font-semibold text-black/50">

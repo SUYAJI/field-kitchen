@@ -1,8 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion as Motion, AnimatePresence } from "motion/react";
-import { INGREDIENTS, Region, SourceLayer, Ingredient } from "../data";
+import { INGREDIENTS, Region, SourceLayer, Ingredient, SUPPORTED_SOURCE_LAYERS } from "../data";
 
-const LAYERS: SourceLayer[] = ['Local', 'Regional', 'Wild Foraged'];
+const LAYER_CONFIG: Record<SourceLayer, { radius: number; jitterScale: number; inset: number; labelTop: number; color: string }> = {
+  Local: { radius: 12, jitterScale: 0.3, inset: 38, labelTop: 40, color: '#2a9d8f' },
+  Regional: { radius: 28, jitterScale: 0.3, inset: 22, labelTop: 24, color: '#f4a261' },
+  Imported: { radius: 35, jitterScale: 0.25, inset: 15, labelTop: 17, color: '#bc6c25' },
+  'Wild Foraged': { radius: 42, jitterScale: 0.2, inset: 8, labelTop: 10, color: '#606c38' },
+};
 const HABITAT_MAP: Record<string, string> = {
   'Forest Floor': 'Temperate old-growth understory, damp soil and duff layer',
   'Subalpine Scrub': 'High-elevation shrubland, volcanic soils, seasonal snowmelt',
@@ -23,12 +28,24 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
     );
   }, [activeRegion]);
 
+  const activeLayers = useMemo(() => {
+    return SUPPORTED_SOURCE_LAYERS.filter((layer) =>
+      filteredIngredients.some((ingredient) => ingredient.sourceLayer === layer)
+    );
+  }, [filteredIngredients]);
+
   const ingredientsByLayer = useMemo(() => {
-    return LAYERS.reduce((acc, layer) => {
+    return activeLayers.reduce((acc, layer) => {
       acc[layer] = filteredIngredients.filter(i => i.sourceLayer === layer);
       return acc;
-    }, {} as Record<SourceLayer, typeof INGREDIENTS>);
-  }, [filteredIngredients]);
+    }, {} as Partial<Record<SourceLayer, typeof INGREDIENTS>>);
+  }, [activeLayers, filteredIngredients]);
+
+  useEffect(() => {
+    if (hoveredIngredient && !filteredIngredients.some((ingredient) => ingredient.id === hoveredIngredient.id)) {
+      setHoveredIngredient(null);
+    }
+  }, [filteredIngredients, hoveredIngredient]);
 
   // Stable positions based on ingredient id
   const getPosition = (ingredient: Ingredient, layer: SourceLayer, index: number, total: number) => {
@@ -37,10 +54,8 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
     const seed = ingredient.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
     const jitter = ((seed % 20) - 10) * 0.5;
     
-    let radius: number;
-    if (layer === 'Local') radius = 12 + jitter * 0.3;
-    else if (layer === 'Regional') radius = 28 + jitter * 0.3;
-    else radius = 42 + jitter * 0.2; // Wild Foraged outer
+    const layerConfig = LAYER_CONFIG[layer];
+    const radius = layerConfig.radius + jitter * layerConfig.jitterScale;
 
     const x = 50 + Math.cos(angle) * radius;
     const y = 50 + Math.sin(angle) * radius;
@@ -64,9 +79,9 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
 
       {/* Legend */}
       <div className="relative z-20 flex gap-6 mb-6 text-[10px] uppercase tracking-widest font-semibold text-black/30 shrink-0">
-        {LAYERS.map((layer) => (
+        {activeLayers.map((layer) => (
           <div key={layer} className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${layer === 'Local' ? 'bg-[#2a9d8f]' : layer === 'Regional' ? 'bg-[#f4a261]' : 'bg-[#606c38]'}`} />
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: LAYER_CONFIG[layer].color }} />
             {layer}
           </div>
         ))}
@@ -76,18 +91,28 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
         <div className="relative w-full max-w-[700px] aspect-square">
           
           {/* Concentric rings */}
-          <div className="absolute inset-[8%] rounded-full border border-black/[0.06]" />
-          <div className="absolute inset-[22%] rounded-full border border-black/[0.06]" />
-          <div className="absolute inset-[38%] rounded-full border border-black/[0.06]" />
+          {activeLayers.map((layer) => (
+            <div
+              key={`ring-${layer}`}
+              className="absolute rounded-full border border-black/[0.06]"
+              style={{ inset: `${LAYER_CONFIG[layer].inset}%` }}
+            />
+          ))}
           
           {/* Layer labels */}
-          <div className="absolute top-[40%] left-1/2 -translate-x-1/2 text-[9px] uppercase font-semibold tracking-[0.2em] text-black/15">Local</div>
-          <div className="absolute top-[24%] left-1/2 -translate-x-1/2 text-[9px] uppercase font-semibold tracking-[0.2em] text-black/15">Regional</div>
-          <div className="absolute top-[10%] left-1/2 -translate-x-1/2 text-[9px] uppercase font-semibold tracking-[0.2em] text-[#606c38]/30 border border-[#606c38]/10 px-3 py-0.5 rounded-full bg-[#606c38]/[0.03]">Wild Foraged</div>
+          {activeLayers.map((layer) => (
+            <div
+              key={`label-${layer}`}
+              className={`absolute left-1/2 -translate-x-1/2 text-[9px] uppercase font-semibold tracking-[0.2em] ${layer === 'Wild Foraged' ? 'text-[#606c38]/30 border border-[#606c38]/10 px-3 py-0.5 rounded-full bg-[#606c38]/[0.03]' : 'text-black/15'}`}
+              style={{ top: `${LAYER_CONFIG[layer].labelTop}%` }}
+            >
+              {layer}
+            </div>
+          ))}
 
           {/* Ingredient Nodes */}
-          {LAYERS.map((layer) => {
-            const items = ingredientsByLayer[layer];
+          {activeLayers.map((layer) => {
+            const items = ingredientsByLayer[layer] ?? [];
             return items.map((ingredient, i) => {
               const pos = getPosition(ingredient, layer, i, items.length);
               const isHovered = hoveredIngredient?.id === ingredient.id;
