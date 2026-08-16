@@ -63,6 +63,7 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.5, delay: idx * 0.04, ease: "easeOut" }}
                   whileHover="hover"
+                  whileFocus="hover"
                   whileTap={{ scale: 0.97 }}
                   onClick={(event) => {
                     detailTriggerRef.current = event.currentTarget;
@@ -71,27 +72,27 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                   aria-expanded={selectedIngredient?.id === ingredient.id}
                   aria-controls="ingredient-detail-panel"
                   aria-label={`${ingredient.name}, ${ingredient.seasons.join(' and ')}, ${ingredient.region.join(', ')}. Open ingredient details.`}
-                  className={`group relative h-[300px] sm:h-[340px] w-full text-left bg-white/40 backdrop-blur-md border border-black/5 rounded-2xl flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 ${selectedIngredient?.id === ingredient.id ? 'ring-2 ring-black/20 shadow-2xl' : ''}`}
+                  className={`group relative h-[300px] sm:h-[340px] w-full text-left bg-white/40 backdrop-blur-md border border-black/5 rounded-2xl flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/50 focus-visible:ring-offset-2 ${selectedIngredient?.id === ingredient.id ? 'ring-2 ring-black/20 shadow-2xl' : ''}`}
                 >
-                  {/* Hover BG */}
+                  {/* Ingredient image is visible by default; hover/focus adds contrast and motion. */}
                   <div 
-                    className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-70"
+                    className="absolute inset-0 bg-cover bg-center opacity-75 transition-all duration-700 group-hover:scale-105 group-hover:opacity-100 group-focus-visible:scale-105 group-focus-visible:opacity-100"
                     style={{ 
-                      backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.15)), url(${ingredient.image})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
+                      backgroundImage: `url(${ingredient.image})`,
                     }}
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#faf9f6] via-[#faf9f6]/80 to-white/30 transition-opacity duration-500 group-hover:opacity-0 group-focus-visible:opacity-0" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-focus-visible:opacity-100" />
 
                   <header className="relative z-10 p-5 flex justify-between items-start">
                     <div className="flex flex-col gap-1.5">
                       {/* Season Tag */}
-                      <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-widest font-semibold text-black/50 group-hover:text-white/80 transition-colors duration-500 bg-black/[0.03] group-hover:bg-white/10 px-2 py-0.5 rounded-full w-fit">
+                      <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-widest font-semibold text-black/50 group-hover:text-white/80 group-focus-visible:text-white/80 transition-colors duration-500 bg-black/[0.03] group-hover:bg-white/10 group-focus-visible:bg-white/10 px-2 py-0.5 rounded-full w-fit">
                         <Leaf className="w-2.5 h-2.5" />
                         {ingredient.seasons.join(' / ')}
                       </span>
                       {/* Region Tag */}
-                      <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-widest font-semibold text-black/40 group-hover:text-white/70 transition-colors duration-500">
+                      <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-widest font-semibold text-black/40 group-hover:text-white/70 group-focus-visible:text-white/70 transition-colors duration-500">
                         <MapPin className="w-2.5 h-2.5" />
                         {ingredient.region[0]}
                       </span>
@@ -100,12 +101,12 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                     <div className="flex flex-col items-end gap-1">
                       <div className="flex items-center gap-1">
                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: ingredient.color }} />
-                        <span className="text-[9px] font-semibold tracking-wider uppercase text-black/40 group-hover:text-white/70 transition-colors">
+                        <span className="text-[9px] font-semibold tracking-wider uppercase text-black/40 group-hover:text-white/70 group-focus-visible:text-white/70 transition-colors">
                           ND {ingredient.nutrientDensity}
                         </span>
                       </div>
                       {/* Pairing Strength */}
-                      <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-widest font-semibold text-black/30 group-hover:text-white/60 transition-colors">
+                      <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-widest font-semibold text-black/30 group-hover:text-white/60 group-focus-visible:text-white/60 transition-colors">
                         <Link2 className="w-2.5 h-2.5" />
                         {pairingStrength}
                       </span>
@@ -113,7 +114,7 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                   </header>
 
                   <div className="relative z-10 p-5 mt-auto">
-                    <span className="block font-['Playfair_Display'] text-4xl font-semibold tracking-tight text-[#1a1a1a] mb-1 group-hover:text-white transition-colors duration-500">
+                    <span className="block font-['Playfair_Display'] text-4xl font-semibold tracking-tight text-[#1a1a1a] mb-1 group-hover:text-white group-focus-visible:text-white transition-colors duration-500">
                       {ingredient.name}
                     </span>
                     <Motion.div 
@@ -129,10 +130,10 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                     </Motion.div>
                   </div>
 
-                  <footer className="relative z-10 px-5 pb-4 flex justify-between items-center text-black/40 group-hover:text-white/60 transition-colors duration-500 pt-3 border-t border-black/5 group-hover:border-white/10 mx-2">
+                  <footer className="relative z-10 px-5 pb-4 flex justify-between items-center text-black/40 group-hover:text-white/60 group-focus-visible:text-white/60 transition-colors duration-500 pt-3 border-t border-black/5 group-hover:border-white/10 group-focus-visible:border-white/10 mx-2">
                     <div className="flex gap-1.5">
                       {ingredient.preparations.slice(0, 4).map((prep) => (
-                        <div key={prep} className="p-1 bg-black/[0.03] group-hover:bg-white/10 rounded transition-colors" title={prep}>
+                        <div key={prep} className="p-1 bg-black/[0.03] group-hover:bg-white/10 group-focus-visible:bg-white/10 rounded transition-colors" title={prep}>
                           <PrepIcon type={prep} />
                         </div>
                       ))}
