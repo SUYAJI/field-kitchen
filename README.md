@@ -4,7 +4,7 @@ Field Kitchen is an experimental ingredient-intelligence interface for exploring
 
 ## Demo
 
-Live demo: deployment pending.
+[LIVE DEMO](https://field-kitchen-chi.vercel.app/)
 
 ## What it explores
 
