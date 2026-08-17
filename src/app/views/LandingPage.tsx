@@ -50,7 +50,6 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
 
   return (
     <div className="relative w-full min-h-dvh flex flex-col justify-start lg:justify-center items-center overflow-x-hidden p-6 md:p-12 text-[#0d2110] selection:bg-[#e76f51]/30 lg:h-full lg:overflow-y-auto">
-      {/* Background */}
       <div className="absolute inset-0 pointer-events-none opacity-80 mix-blend-multiply overflow-hidden z-0">
         <div 
           className="absolute inset-0 opacity-[0.04]" 
@@ -75,7 +74,6 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
 
       <main className="relative z-10 w-full max-w-[1400px] flex flex-col lg:flex-row justify-between items-start lg:items-end gap-12 lg:gap-8 h-auto py-8 md:py-12 lg:h-full lg:py-24">
         
-        {/* Left Column */}
         <div className="flex flex-col h-auto lg:h-full justify-between max-w-2xl w-full">
           <header>
             <Motion.div 
@@ -136,7 +134,6 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
           </Motion.div>
         </div>
 
-        {/* Right Column */}
         <Motion.div 
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -184,7 +181,6 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
         </Motion.div>
       </main>
 
-      {/* Dataset Transparency Panel */}
       <AnimatePresence>
         {datasetOpen && (
           <>
@@ -221,7 +217,6 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
               </div>
 
               <div className="flex-1 overflow-y-auto p-5 sm:p-8">
-                {/* Summary Stats */}
                 <div className="grid grid-cols-3 gap-4 mb-10">
                   {[
                     { n: DATASET_SUMMARY.ingredientCount, l: "Ingredients" },
@@ -244,7 +239,6 @@ export function LandingPage({ onEnter }: { onEnter: () => void }) {
                   ))}
                 </div>
 
-                {/* Detailed Breakdown */}
                 <div className="space-y-6">
                   {DATASET_DETAILS.map((d, i) => (
                     <Motion.div

@@ -77,10 +77,9 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
     }
   }, [filteredIngredients, hoveredIngredient, selectedIngredient]);
 
-  // Stable positions based on ingredient id
+  // Derive stable node positions from ingredient IDs.
   const getPosition = (ingredient: Ingredient, layer: SourceLayer, index: number, total: number) => {
     const angle = (index / Math.max(total, 1)) * Math.PI * 2 - Math.PI / 2;
-    // Seed-based offset from id
     const seed = ingredient.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
     const jitter = ((seed % 20) - 10) * 0.5;
     
@@ -108,7 +107,6 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
         </span>
       </header>
 
-      {/* Legend */}
       <div className="relative z-20 flex flex-wrap gap-4 sm:gap-6 mb-5 lg:mb-6 text-[10px] uppercase tracking-widest font-semibold text-black/45 shrink-0">
         {activeLayers.map((layer) => (
           <div key={layer} className="flex items-center gap-2">
@@ -121,7 +119,6 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
       <div className="relative flex-none min-h-[340px] sm:min-h-[460px] lg:min-h-[280px] min-[1360px]:min-h-[440px] w-full flex items-center justify-center p-2 sm:p-4">
         <div className="relative w-full max-w-[700px] aspect-square lg:w-[280px] min-[1360px]:w-[440px]">
           
-          {/* Concentric rings */}
           {activeLayers.map((layer) => (
             <div
               key={`ring-${layer}`}
@@ -130,7 +127,6 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
             />
           ))}
           
-          {/* Layer labels */}
           {activeLayers.map((layer) => (
             <div
               key={`label-${layer}`}
@@ -141,7 +137,6 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
             </div>
           ))}
 
-          {/* Ingredient Nodes */}
           {activeLayers.map((layer) => {
             const items = ingredientsByLayer[layer] ?? [];
             return items.map((ingredient, i) => {
@@ -208,7 +203,7 @@ export function SourceMap({ activeRegion }: { activeRegion: Region | "All" }) {
         ))}
       </div>
 
-      {/* Selected habitat detail stays outside the dense radial field. */}
+      {/* Keep selected habitat context outside the radial field. */}
       <AnimatePresence>
         {activeIngredient && (
           <Motion.div

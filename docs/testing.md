@@ -64,7 +64,7 @@ Playwright automatically starts and stops the local Vite server. Successful runs
 10. Use keyboard focus to open one ingredient detail, then close it with Escape and confirm focus returns.
 11. Optionally enable reduced motion and confirm the Seasonal Map sweep stops.
 
-Manual QA should focus primarily on the feature that changed and any directly related interface. The automated suite protects the main application, state, accessibility, motion, and overflow regressions.
+For future changes, manually inspect the changed feature and directly related interface. The automated suite covers the main application, state, accessibility, motion, and overflow regressions.
 
 ## Before committing future changes
 

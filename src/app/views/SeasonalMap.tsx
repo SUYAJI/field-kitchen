@@ -25,7 +25,6 @@ export function SeasonalMap({ activeRegion }: { activeRegion: Region | "All" }) 
     trapFocus: isModalDetail,
   });
 
-  // Animated time sweep
   useEffect(() => {
     if (shouldReduceMotion || isSweepPaused) return;
     const interval = setInterval(() => {
@@ -95,7 +94,6 @@ export function SeasonalMap({ activeRegion }: { activeRegion: Region | "All" }) 
 
       <div onFocusCapture={() => setIsSweepPaused(true)} onPointerDown={() => setIsSweepPaused(true)} onMouseEnter={() => setIsSweepPaused(true)} className="w-full overflow-x-auto overflow-y-visible relative pb-4 overscroll-x-contain lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:pb-0">
         <div className="min-w-[800px] w-full relative">
-          {/* Months Header */}
           <div className="grid grid-cols-[200px_repeat(12,minmax(0,1fr))] gap-2 mb-4 text-[10px] uppercase tracking-widest font-semibold text-black/45 border-b border-black/10 pb-4 sticky top-0 bg-[#faf9f6]/80 backdrop-blur-md z-20">
             <div className="pl-4">Ingredient</div>
             {MONTHS.map((m, i) => (
@@ -105,7 +103,6 @@ export function SeasonalMap({ activeRegion }: { activeRegion: Region | "All" }) 
             ))}
           </div>
 
-          {/* Time Sweep Indicator */}
           <div 
             data-testid="seasonal-sweep"
             className="absolute top-0 bottom-0 w-[1px] bg-[#e76f51]/30 z-10 pointer-events-none transition-all duration-[1800ms] ease-linear"
@@ -118,7 +115,6 @@ export function SeasonalMap({ activeRegion }: { activeRegion: Region | "All" }) 
             />
           </div>
 
-          {/* Timeline Rows */}
           <div className="space-y-2 pb-20">
             {filteredIngredients.map((ingredient, idx) => {
               const isHovered = hoveredIngredient === ingredient.id;
@@ -174,7 +170,6 @@ export function SeasonalMap({ activeRegion }: { activeRegion: Region | "All" }) 
         </div>
       </div>
 
-      {/* Detail Overlay */}
       <AnimatePresence>
         {selectedDetail && (
           <Motion.aside
@@ -193,7 +188,7 @@ export function SeasonalMap({ activeRegion }: { activeRegion: Region | "All" }) 
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 id="seasonal-detail-title" className="font-['Playfair_Display'] text-3xl font-semibold">{selectedDetail.name}</h3>
-                <span className="text-[10px] uppercase tracking-widest text-black/40 font-semibold">{selectedDetail.originTag} — {selectedDetail.region[0]}</span>
+                <span className="text-[10px] uppercase tracking-widest text-black/40 font-semibold">{selectedDetail.originTag} · {selectedDetail.region[0]}</span>
               </div>
               <button ref={detailCloseRef} type="button" aria-label="Close seasonal details" onClick={() => setSelectedDetail(null)} className="p-1.5 hover:bg-black/5 rounded-full min-w-11 min-h-11 flex items-center justify-center">
                 <X className="w-4 h-4 text-black/40" />

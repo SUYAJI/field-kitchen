@@ -59,14 +59,12 @@ export default function App() {
             transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="w-full min-h-dvh flex flex-col relative z-0 lg:h-full"
           >
-            {/* Background Texture & Gradients */}
             <div className="absolute inset-0 pointer-events-none opacity-80 mix-blend-multiply overflow-hidden">
               <div 
                 className="absolute inset-0 opacity-[0.04]" 
                 style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}
               />
               
-              {/* Soft Organic Gradients with slow drifting */}
               <Motion.div 
                 animate={shouldReduceMotion ? undefined : { x: [0, 40, -20, 0], y: [0, -40, 20, 0] }}
                 transition={shouldReduceMotion ? undefined : { duration: 30, repeat: Infinity, ease: "linear" }}
@@ -84,7 +82,6 @@ export default function App() {
               />
             </div>
 
-            {/* Top Navigation Bar */}
             <header className="relative z-50 flex flex-col xl:flex-row items-start xl:items-center justify-between p-5 md:p-6 xl:p-10 gap-4 xl:gap-6 border-b border-black/5 backdrop-blur-sm">
               <button 
                 type="button"
@@ -110,7 +107,6 @@ export default function App() {
               </nav>
             </header>
 
-            {/* Mode Indicator Breadcrumb */}
             <div aria-label="Current location" className="relative z-40 px-5 md:px-6 xl:px-10 py-2 flex items-center gap-2 overflow-x-auto whitespace-nowrap text-[10px] uppercase tracking-[0.2em] font-semibold text-black/40 backdrop-blur-md bg-[#faf9f6]/30 border-b border-black/[0.03] overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <span className="text-black/40">Field Kitchen</span>
               <span className="text-black/25">/</span>
@@ -123,7 +119,6 @@ export default function App() {
               ))}
             </div>
 
-            {/* Persistent Region Filter */}
             <div role="group" aria-label="Filter by region" className="relative z-40 px-5 md:px-6 xl:px-10 py-3 flex flex-nowrap gap-3 items-center overflow-x-auto whitespace-nowrap text-[10px] uppercase tracking-widest font-semibold border-b border-black/5 backdrop-blur-md overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <span className="text-black/45 mr-2 shrink-0">Region:</span>
               {regions.map((r) => (
@@ -139,7 +134,6 @@ export default function App() {
               ))}
             </div>
 
-            {/* Main Content Area with View Transitions */}
             <main aria-label={activeViewLabel} className="relative z-[60] flex-none overflow-visible lg:z-10 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
               <AnimatePresence mode="wait">
                 {activeView === "LIBRARY" && (

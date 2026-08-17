@@ -114,7 +114,6 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
     };
   }, [selectedIngredient, activeFilters, filteredIngredients, updatePositions]);
 
-  // Connection lines with strength
   const connections = useMemo(() => {
     if (!selectedIngredient || cardPositions.size === 0) return [];
     const selectedPos = cardPositions.get(selectedIngredient.id);
@@ -155,7 +154,6 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
         </span>
       </header>
 
-      {/* Technique Filters */}
       <div role="group" aria-label="Filter pairings by preparation technique" className="relative z-20 flex flex-wrap gap-2 mb-5 lg:mb-6 border-b border-black/10 pb-4 lg:pb-5 shrink-0">
         <span className="text-[10px] uppercase font-semibold tracking-widest text-black/45 w-full mb-2">Technique Reshaping Filters</span>
         {PREP_METHODS.map((method) => {
@@ -180,7 +178,6 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
         })}
       </div>
 
-      {/* Strength Legend — visible when ingredient is selected */}
       <AnimatePresence>
         {selectedIngredient && (
           <Motion.div
@@ -209,9 +206,7 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
         )}
       </AnimatePresence>
 
-      {/* Field Visualization */}
       <div ref={containerRef} className="relative z-10 w-full overflow-hidden lg:flex-1 lg:min-h-0">
-        {/* Background glow */}
         <AnimatePresence>
           {selectedIngredient && (
             <Motion.div
@@ -226,7 +221,6 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
           )}
         </AnimatePresence>
 
-        {/* Connection Lines SVG */}
         {connections.length > 0 && (
           <svg className="absolute inset-0 z-0 h-full w-full overflow-hidden pointer-events-none">
             <defs>
@@ -265,16 +259,13 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
           {filteredIngredients.map((ingredient, i) => {
             const isSelected = selectedIngredient?.id === ingredient.id;
             
-            // Progressive strength instead of binary
             const strength = selectedIngredient ? getPairingStrength(selectedIngredient, ingredient) : null;
             const passesFilters = activeFilters.length === 0 || activeFilters.some(f => ingredient.preparations.includes(f));
             
-            // Visual states
             const isHighlighted = isSelected || (strength !== null && passesFilters);
             const strengthConfig = strength ? STRENGTH_CONFIG[strength] : null;
             const isFaded = (selectedIngredient && !isHighlighted) || (!selectedIngredient && activeFilters.length > 0 && !passesFilters);
 
-            // Compute opacity based on strength
             let cardOpacity = 1;
             if (isFaded) cardOpacity = 0.12;
             else if (selectedIngredient && !isSelected && strengthConfig) cardOpacity = strengthConfig.opacity;
@@ -316,13 +307,11 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
                     : 'border-black/5 shadow-sm hover:shadow-md hover:scale-[1.02]'
                 }`}
               >
-                {/* Image */}
                 <div 
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
                   style={{ backgroundImage: `url(${ingredient.image})` }}
                 />
                 
-                {/* Overlay — strength-aware */}
                 <div 
                   className={`absolute inset-0 transition-all duration-500 ${isHighlighted ? '' : 'opacity-50 bg-black/40 group-hover:bg-black/20'}`}
                   style={isHighlighted ? { 
@@ -331,7 +320,6 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
                   } : undefined} 
                 />
 
-                {/* Glow ring for strong pairings */}
                 {strength === 'strong' && passesFilters && selectedIngredient && (
                   <Motion.div
                     initial={{ opacity: 0 }}
@@ -342,7 +330,6 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
                   />
                 )}
 
-                {/* Content */}
                 <div className="absolute inset-0 p-2.5 sm:p-3 flex flex-col justify-between">
                   <div className="flex justify-between items-start">
                     <span className="text-[8px] sm:text-[9px] uppercase tracking-widest font-semibold text-white/90 bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-md">
@@ -382,7 +369,6 @@ export function PairingField({ activeRegion }: { activeRegion: Region | "All" })
                   </div>
                 </div>
 
-                {/* Filter indicator */}
                 {passesFilters && activeFilters.length > 0 && (
                   <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 flex flex-col gap-0.5">
                     {activeFilters.filter(f => ingredient.preparations.includes(f)).map(f => {

@@ -21,7 +21,7 @@ This release uses a small modeled prototype dataset. Nutritional values are illu
 
 ## Development history
 
-The interface was initially prototyped in Figma Make and exported as a React application. The export was then extracted and developed as a standalone codebase: generated scaffold and dependencies were audited and reduced, obsolete Make infrastructure was removed, strict TypeScript tooling was established, prototype model and state inconsistencies were reconciled, responsive and accessibility defects were repaired, and regression coverage was added with Vitest and Playwright.
+Field Kitchen began as a Figma Make prototype and was exported as a React application. It was then developed as a standalone codebase with a smaller dependency set, strict TypeScript tooling, responsive and accessibility fixes, reconciled prototype state, and Vitest and Playwright coverage.
 
 ## Stack
 

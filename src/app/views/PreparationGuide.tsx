@@ -81,7 +81,6 @@ export function PreparationGuide({ activeRegion }: { activeRegion: Region | "All
             exit={{ opacity: 0 }}
             className="flex-none flex flex-col lg:flex-row gap-8 mt-2 z-10 relative min-h-0 lg:flex-1"
           >
-            {/* Techniques List */}
             <div role="group" aria-label="Choose preparation technique" className="w-full lg:w-1/3 flex flex-col gap-3 lg:border-r border-black/10 lg:pr-6 overflow-visible pb-8 shrink-0 lg:overflow-y-auto">
               <div className="text-[10px] uppercase font-semibold tracking-widest text-black/45 mb-2">Technique Index</div>
               {PREP_METHODS.map((method) => {
@@ -109,7 +108,6 @@ export function PreparationGuide({ activeRegion }: { activeRegion: Region | "All
               })}
             </div>
 
-            {/* Compatible Ingredients */}
             <div className="w-full lg:w-2/3 relative flex flex-col overflow-visible pb-12 lg:overflow-y-auto">
               <div className="text-[10px] uppercase font-semibold tracking-widest text-black/45 mb-6">Compatible Ingredients</div>
               
@@ -238,7 +236,7 @@ export function PreparationGuide({ activeRegion }: { activeRegion: Region | "All
                                 </div>
                               </Motion.div>
                             ) : (
-                              <span className="text-black/10">—</span>
+                              <span className="text-black/10">-</span>
                             )}
                           </td>
                         );

@@ -74,7 +74,7 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                   aria-label={`${ingredient.name}, ${ingredient.seasons.join(' and ')}, ${ingredient.region.join(', ')}. Open ingredient details.`}
                   className={`group relative h-[300px] sm:h-[340px] w-full text-left bg-white/40 backdrop-blur-md border border-black/5 rounded-2xl flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/50 focus-visible:ring-offset-2 ${selectedIngredient?.id === ingredient.id ? 'ring-2 ring-black/20 shadow-2xl' : ''}`}
                 >
-                  {/* Ingredient image is visible by default; hover/focus adds contrast and motion. */}
+                  {/* Keep the image visible at rest; hover and focus shift contrast. */}
                   <div 
                     className="absolute inset-0 bg-cover bg-center opacity-75 transition-all duration-700 group-hover:scale-105 group-hover:opacity-100 group-focus-visible:scale-105 group-focus-visible:opacity-100"
                     style={{ 
@@ -86,18 +86,15 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
 
                   <header className="relative z-10 p-5 flex justify-between items-start">
                     <div className="flex flex-col gap-1.5">
-                      {/* Season Tag */}
                       <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-widest font-semibold text-black/50 group-hover:text-white/80 group-focus-visible:text-white/80 transition-colors duration-500 bg-black/[0.03] group-hover:bg-white/10 group-focus-visible:bg-white/10 px-2 py-0.5 rounded-full w-fit">
                         <Leaf className="w-2.5 h-2.5" />
                         {ingredient.seasons.join(' / ')}
                       </span>
-                      {/* Region Tag */}
                       <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-widest font-semibold text-black/40 group-hover:text-white/70 group-focus-visible:text-white/70 transition-colors duration-500">
                         <MapPin className="w-2.5 h-2.5" />
                         {ingredient.region[0]}
                       </span>
                     </div>
-                    {/* Nutrient Density */}
                     <div className="flex flex-col items-end gap-1">
                       <div className="flex items-center gap-1">
                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: ingredient.color }} />
@@ -105,7 +102,6 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                           ND {ingredient.nutrientDensity}
                         </span>
                       </div>
-                      {/* Pairing Strength */}
                       <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-widest font-semibold text-black/30 group-hover:text-white/60 group-focus-visible:text-white/60 transition-colors">
                         <Link2 className="w-2.5 h-2.5" />
                         {pairingStrength}
@@ -149,7 +145,6 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
         </div>
       </div>
 
-      {/* Detail Panel */}
       <AnimatePresence>
         {selectedIngredient && (
           <Motion.aside
@@ -165,7 +160,6 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             className="fixed inset-0 h-dvh w-full bg-[#faf9f6]/95 backdrop-blur-2xl flex flex-col shadow-2xl overflow-y-auto z-[100] lg:absolute lg:inset-auto lg:top-0 lg:right-0 lg:h-full lg:max-w-[440px] lg:border-l lg:border-black/10"
           >
-            {/* Hero Image */}
             <div className="relative h-48 shrink-0 overflow-hidden">
               <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${selectedIngredient.image})` }} />
               <div className="absolute inset-0 bg-gradient-to-t from-[#faf9f6] via-transparent to-transparent" />
@@ -185,11 +179,10 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                 {selectedIngredient.name}
               </h2>
               <p className="text-[10px] tracking-widest uppercase text-black/50 font-semibold mb-8">
-                {selectedIngredient.originTag} — {selectedIngredient.sourceLayer} — {selectedIngredient.region.join(', ')}
+                {selectedIngredient.originTag} · {selectedIngredient.sourceLayer} · {selectedIngredient.region.join(', ')}
               </p>
 
               <div className="space-y-8 flex-1">
-                {/* Harvest Window */}
                 <div className="space-y-3">
                   <span className="text-[10px] uppercase tracking-widest font-semibold text-black/40 flex items-center gap-2">
                     <Calendar className="w-3 h-3" /> Harvest Window
@@ -214,7 +207,6 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                   </div>
                 </div>
 
-                {/* Pairing Field Preview */}
                 <div className="space-y-3">
                   <span className="text-[10px] uppercase tracking-widest font-semibold text-black/40 flex items-center gap-2">
                     <Link2 className="w-3 h-3" /> Pairing Network
@@ -237,7 +229,6 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                   </div>
                 </div>
 
-                {/* Nutrient Profile */}
                 <div className="space-y-3">
                   <span className="text-[10px] uppercase tracking-widest font-semibold text-black/40">Nutrient Density Matrix</span>
                   <div className="grid grid-cols-2 gap-3">
@@ -266,7 +257,6 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                   </div>
                 </div>
 
-                {/* Methods */}
                 <div className="space-y-3">
                   <span className="text-[10px] uppercase tracking-widest font-semibold text-black/40">Preparation Techniques</span>
                   <div className="flex flex-wrap gap-2">
@@ -279,7 +269,6 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
                   </div>
                 </div>
 
-                {/* Regional Context */}
                 <div className="space-y-3">
                   <span className="text-[10px] uppercase tracking-widest font-semibold text-black/40 flex items-center gap-2">
                     <MapPin className="w-3 h-3" /> Regional Sourcing

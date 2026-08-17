@@ -53,17 +53,15 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
 
   const currentMetricConfig = METRICS.find(m => m.key === activeMetric)!;
 
-  // Compute positions based on active metric - sorted by metric value, arranged in a radial pattern
+  // Rank nodes by the active metric and arrange them radially.
   const sortedIngredients = useMemo(() => {
     return [...filteredIngredients].sort((a, b) => b.nutrients[activeMetric] - a.nutrients[activeMetric]);
   }, [filteredIngredients, activeMetric]);
 
-  // Stable position calculation
   const getPosition = (ingredient: Ingredient, index: number, total: number) => {
     const value = ingredient.nutrients[activeMetric];
-    // Higher value = closer to center
     const normalizedDistance = 1 - (value / PROTOTYPE_INDEX_RANGES.nutrientMetrics.max);
-    const radius = 10 + normalizedDistance * 35; // 10% to 45% from center
+    const radius = 10 + normalizedDistance * 35;
     const angle = (index / total) * Math.PI * 2 - Math.PI / 2;
     const seed = ingredient.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
     const jitter = ((seed % 10) - 5) * 0.5;
@@ -90,7 +88,6 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
         </span>
       </header>
 
-      {/* Metric Switcher */}
       <div role="group" aria-label="Choose nutrient metric" className="relative z-20 flex flex-wrap gap-2 mb-5 lg:mb-6 shrink-0">
         {METRICS.map((metric) => (
           <button
@@ -111,7 +108,6 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
         ))}
       </div>
 
-      {/* Radial Background */}
       <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center">
         <Motion.div
           key={activeMetric}
@@ -123,7 +119,6 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
         />
       </div>
 
-      {/* Concentric rings */}
       <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center">
         <div className="relative w-[80%] max-w-[700px] aspect-square">
           {[0.3, 0.55, 0.8].map((scale, i) => (
@@ -136,14 +131,13 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
         </div>
       </div>
 
-      {/* Ingredient Nodes */}
       <div className="relative flex-none min-h-[400px] sm:min-h-[520px] lg:min-h-[280px] min-[1360px]:min-h-[440px] z-10 flex items-center justify-center">
         <div className="relative w-[calc(100%-2rem)] sm:w-full max-w-[700px] aspect-square lg:w-[280px] min-[1360px]:w-[440px]">
           {sortedIngredients.map((ingredient, i) => {
             const pos = getPosition(ingredient, i, sortedIngredients.length);
             const value = ingredient.nutrients[activeMetric];
             const isActive = activeNode?.id === ingredient.id;
-            const nodeSize = 12 + (value / PROTOTYPE_INDEX_RANGES.nutrientMetrics.max) * 20; // 12px to 32px
+            const nodeSize = 12 + (value / PROTOTYPE_INDEX_RANGES.nutrientMetrics.max) * 20;
             const labelPlacement = getRadialLabelPlacement(pos.x, pos.y);
 
             return (
@@ -215,7 +209,7 @@ export function NutrientView({ activeRegion }: { activeRegion: Region | "All" })
         ))}
       </div>
 
-      {/* Selected nutrient detail stays outside the dense radial field. */}
+      {/* Keep selected metric details outside the radial field. */}
       <AnimatePresence>
         {activeNode && (
           <Motion.div
