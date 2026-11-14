@@ -32,12 +32,12 @@ There are twelve preparation concepts. Each has:
 
 `recommend(selectedIds)` is deterministic and has no numeric score:
 
-1. A preparation appears when at least one selected ingredient fills one of its components.
-2. A preparation is `ready` when every required component is filled. Otherwise it lists the `missing` components.
+1. A preparation appears when at least one selected ingredient fills one of its required components. Optional extras alone do not surface an idea.
+2. A preparation is `ready` (shown as "Ready with pantry staples") when every required component is filled. Otherwise it lists the `missing` components.
 3. Results are ordered by fewest missing required components, then most selected ingredients used, then curated list order.
 
 `formatRecommendationForCopy` produces the plain-text card used by **Copy idea**. It includes the concept disclaimer, basis and source URLs.
 
 ## Removed from the first prototype
 
-The first prototype's modelled fields had no citations and have been removed: nutrient indices, sub-regions, source layers, local priority, harvest windows and pairing labels. The original implementation remains on `main`.
+The first prototype's modelled fields had no citations and have been removed: nutrient indices, sub-regions, source layers, local priority, harvest windows and pairing labels. The original implementation remains in the Git history at commit `ba11b23`.

@@ -84,9 +84,12 @@ export function KitchenPlanner({ selectedIds, onToggle, onSetSelection, onOpenSo
               </FilterChip>
             ))}
             <FilterChip pressed={inSeasonOnly} onClick={() => setInSeasonOnly((value) => !value)} accent>
-              Available in {MONTHS[CURRENT_MONTH]} (Oregon)
+              Typically available in {MONTHS[CURRENT_MONTH]}
             </FilterChip>
           </div>
+          <p className="text-xs leading-relaxed text-black/65">
+            Leaf markers show produce typically available in Oregon in {MONTHS[CURRENT_MONTH]}, based on a 2017 Oregon Department of Education chart. They do not reflect live supplier stock.
+          </p>
         </div>
 
         {visibleIngredients.length === 0 ? (
@@ -159,7 +162,7 @@ export function KitchenPlanner({ selectedIds, onToggle, onSetSelection, onOpenSo
             ? ""
             : recommendations.length === 0
               ? "No ideas use this combination yet. Try adding a staple such as potatoes or onions."
-              : `${recommendations.length} ${recommendations.length === 1 ? "idea" : "ideas"} · ${readyCount} ready with what you have`}
+              : `${recommendations.length} ${recommendations.length === 1 ? "idea" : "ideas"} · ${readyCount} need only pantry staples`}
         </p>
 
         {selectedIds.length === 0 ? (
@@ -221,7 +224,7 @@ function IngredientGrid({ ingredients, selected, onToggle, label }: { ingredient
             <button
               type="button"
               aria-pressed={isSelected}
-              aria-label={inSeason ? `${ingredient.name}, in season in Oregon this month` : ingredient.name}
+              aria-label={inSeason ? `${ingredient.name}, typically available in Oregon in ${MONTHS[CURRENT_MONTH]}` : ingredient.name}
               onClick={() => onToggle(ingredient.id)}
               className={`group relative flex aspect-[4/5] w-full flex-col justify-end overflow-hidden rounded-xl text-left transition-[box-shadow,transform] duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a1a1a] focus-visible:ring-offset-2 active:scale-[0.98] ${isSelected ? "shadow-lg ring-2 ring-[#1a1a1a] ring-offset-2 ring-offset-[#faf9f6]" : "shadow-sm hover:shadow-md"}`}
             >
@@ -234,7 +237,7 @@ function IngredientGrid({ ingredients, selected, onToggle, label }: { ingredient
               {inSeason && (
                 <span aria-hidden="true" className="absolute left-2 top-2 inline-flex h-6 items-center gap-1 rounded-full bg-[#faf9f6]/90 px-1.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#1f5e47] sm:px-2">
                   <Leaf className="h-3 w-3" />
-                  <span className="hidden sm:inline">In season</span>
+                  <span className="hidden sm:inline">Typical {MONTHS[CURRENT_MONTH]}</span>
                 </span>
               )}
               <span
@@ -346,10 +349,10 @@ function RecommendationCard({
           <span className="flex w-full flex-col gap-1">
             <span className="flex w-full flex-wrap items-center justify-between gap-2">
               <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-black/60">
-                {preparation.category} · {preparation.technique}
+                {preparation.category} · {preparation.technique} · {preparation.basis.kind === "established" ? "Established preparation" : "Curated idea"}
               </span>
               <span className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${ready ? "bg-[#2a7d5f]/12 text-[#1f5e47]" : "bg-[#b5401f]/10 text-[#9a3412]"}`}>
-                {ready ? "Ready to make" : `Needs ${missing.length} more`}
+                {ready ? "Ready with pantry staples" : `Needs ${missing.length} more`}
               </span>
             </span>
             <span id={`${panelId}-name`} className="font-['Playfair_Display'] text-2xl font-semibold leading-tight text-[#1a1a1a]">{preparation.name}</span>
@@ -449,7 +452,8 @@ function PreparationDetail({
         </IngredientGroup>
       </div>
 
-      <h4 className="mt-6 text-[11px] font-semibold uppercase tracking-[0.15em] text-black/60">Method</h4>
+      <h4 className="mt-6 text-[11px] font-semibold uppercase tracking-[0.15em] text-black/60">Method outline</h4>
+      <p className="mt-1 text-xs text-black/65">Untested concept: no quantities, yields or timings. Adjust to your kitchen.</p>
       <ol className="mt-2 flex flex-col gap-2">
         {preparation.method.map((step, index) => (
           <li key={step} className="flex gap-3 text-sm leading-relaxed text-black/80">

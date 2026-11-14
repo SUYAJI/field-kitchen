@@ -33,13 +33,13 @@ export function SeasonalMap({ selectedIds, onToggle }: { selectedIds: Ingredient
             Seasons
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-black/70 md:text-base">
-            When Oregon-grown product is marked as available, for planning seasonal specials. This month is {MONTHS[CURRENT_MONTH]}.
+            Months when Oregon-grown produce is typically available, from a 2017 Oregon Department of Education chart. It is a planning reference, not live supplier stock. This month is {MONTHS[CURRENT_MONTH]}.
           </p>
         </div>
         <div role="group" aria-label="Filter by availability" className="flex flex-wrap gap-2">
           {[
             { label: "All months", value: false },
-            { label: `Available in ${MONTHS[CURRENT_MONTH]}`, value: true },
+            { label: `Typically available in ${MONTHS[CURRENT_MONTH]}`, value: true },
           ].map((option) => (
             <button
               key={option.label}

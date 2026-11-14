@@ -10,7 +10,7 @@ Field Kitchen is a proof-of-concept planning tool for small kitchens. Choose the
 
 - **Kitchen:** select ingredients from 18 everyday items and a separate Specialty & botanicals group. Ideas update as you choose. Each one shows whether it is ready to make or what it still needs, with a method, pantry staples, the reasoning behind it, its basis and its sources. **Copy idea** produces a plain-text card.
 - **Ingredients:** a USDA FoodData Central nutrition record and Oregon availability for each ingredient, where a source exists, plus the ideas it appears in.
-- **Seasons:** Oregon availability by month, with the current month marked.
+- **Seasons:** typical Oregon availability by month, from a 2017 reference chart (not live supplier stock), with the current month marked.
 - **Sources:** the provenance levels, the ranking rules, every source and the known limits.
 
 ## Data status

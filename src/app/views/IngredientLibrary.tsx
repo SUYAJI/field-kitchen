@@ -172,7 +172,7 @@ function IngredientDetail({
 
         <section aria-labelledby="availability-heading">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 id="availability-heading" className="text-[11px] font-semibold uppercase tracking-[0.15em] text-black/60">Oregon availability</h3>
+            <h3 id="availability-heading" className="text-[11px] font-semibold uppercase tracking-[0.15em] text-black/60">Typical Oregon availability</h3>
             {availability ? <ProvenanceBadge level="sourced" /> : null}
           </div>
           {availability ? (
@@ -188,7 +188,7 @@ function IngredientDetail({
                   );
                 })}
               </div>
-              <p className="mt-3 text-xs leading-relaxed text-black/65">Outlined month is the current month. The chart does not distinguish fresh harvest from storage.</p>
+              <p className="mt-3 text-xs leading-relaxed text-black/65">From a 2017 Oregon Department of Education chart, not live supplier stock. The outlined month is the current month. The chart does not distinguish fresh harvest from storage.</p>
               <div className="mt-2"><SourceLink id={availability.sourceId} /></div>
             </>
           ) : (

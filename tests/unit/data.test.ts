@@ -138,6 +138,12 @@ describe('recommend', () => {
     expect(ids(['apple'])).not.toContain('gremolata');
   });
 
+  it('does not suggest ideas from optional extras alone', () => {
+    expect(recommend(['thyme', 'dill'])).toEqual([]);
+    expect(ids(['leek', 'potato', 'garlic', 'thyme'])).not.toContain('berry-shrub');
+    expect(ids(['potato', 'onion'])).not.toContain('nettle-soup');
+  });
+
   it('is deterministic', () => {
     expect(ids(['carrot', 'garlic', 'thyme', 'dill'])).toEqual(ids(['dill', 'thyme', 'garlic', 'carrot']));
   });

@@ -32,9 +32,9 @@ test('selecting ingredients produces a ready idea with method, basis and sources
 
   await expect(tile(page, 'Potatoes')).toHaveAttribute('aria-pressed', 'true');
   const colcannon = card(page, 'Colcannon');
-  await expect(colcannon.getByText('Ready to make')).toBeVisible();
+  await expect(colcannon.getByText('Ready with pantry staples')).toBeVisible();
   await expect(colcannon.getByRole('heading', { name: 'Method' })).toBeVisible();
-  await expect(colcannon.getByText('Established preparation')).toBeVisible();
+  await expect(colcannon.getByText('Established preparation', { exact: true })).toBeVisible();
   await expect(colcannon.getByRole('link', { name: /Colcannon · Wikipedia/ })).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/Colcannon');
 });
 
@@ -42,7 +42,7 @@ test('removing an ingredient updates the recommendation', async ({ page }) => {
   await openKitchen(page);
   await tile(page, 'Potatoes').click();
   await tile(page, 'Cabbage').click();
-  await expect(card(page, 'Colcannon').getByText('Ready to make')).toBeVisible();
+  await expect(card(page, 'Colcannon').getByText('Ready with pantry staples')).toBeVisible();
 
   await page.getByRole('button', { name: 'Remove Cabbage' }).click();
 
@@ -70,7 +70,7 @@ test('a missing ingredient can be added from the idea itself', async ({ page }) 
   await soup.getByRole('button', { name: /Leek & potato soup/ }).click();
   await soup.getByRole('button', { name: '+ Leeks to your ingredients' }).click();
 
-  await expect(soup.getByText('Ready to make')).toBeVisible();
+  await expect(soup.getByText('Ready with pantry staples')).toBeVisible();
   await expect(tile(page, 'Leeks')).toHaveAttribute('aria-pressed', 'true');
 });
 
@@ -80,7 +80,7 @@ test('an idea can be copied as plain text', async ({ page, context }) => {
   await tile(page, 'Carrots').click();
 
   const pickles = card(page, 'Refrigerator pickled carrots with dill');
-  await expect(pickles.getByText('Ready to make')).toBeVisible();
+  await expect(pickles.getByText('Ready with pantry staples')).toBeVisible();
   await pickles.getByRole('button', { name: 'Copy idea' }).click();
   await expect(pickles.getByRole('status')).toHaveText('Copied to clipboard as plain text.');
 
@@ -150,7 +150,7 @@ test('mobile workflow reaches ideas and never creates page-level overflow', asyn
   await expectNoPageOverflow();
 
   await page.getByRole('button', { name: /See ideas/ }).click();
-  await expect(card(page, 'Mushroom duxelles').getByText('Ready to make')).toBeInViewport();
+  await expect(card(page, 'Mushroom duxelles').getByText('Ready with pantry staples')).toBeInViewport();
 
   for (const view of ['Ingredients', 'Seasons', 'Sources', 'Kitchen']) {
     await page.getByRole('navigation', { name: 'Primary' }).getByRole('button', { name: new RegExp(`^${view}`) }).click();

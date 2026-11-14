@@ -41,7 +41,7 @@ export function SourcesView() {
 
         <h3 className="mt-10 font-['Playfair_Display'] text-2xl font-semibold text-[#1a1a1a]">How ideas are suggested</h3>
         <p className="mt-2 text-sm leading-relaxed text-black/75">
-          Each of the {PREPARATIONS.length} ideas lists the ingredients it needs, with accepted substitutes and optional extras. An idea appears when it uses at least one of your ingredients. Ideas you can make with what you have come first, then those that need the fewest extra ingredients, then those that use the most of yours. There are no hidden scores. {established} ideas are established preparations with a cited reference; {curated} are Field Kitchen combinations and are labelled as curated. All of them are preparation concepts, not tested recipes with quantities.
+          Each of the {PREPARATIONS.length} ideas lists the ingredients it needs, with accepted substitutes and optional extras. An idea appears when one of your ingredients fills one of its main (required) ingredients; optional extras alone do not count. Ideas that need nothing beyond assumed pantry staples come first, then those that need the fewest extra ingredients, then those that use the most of yours. There are no hidden scores. {established} ideas are established preparations with a cited reference; {curated} are Field Kitchen combinations and are labelled as curated. All of them are preparation concepts, not tested recipes with quantities.
         </p>
 
         <h3 className="mt-10 font-['Playfair_Display'] text-2xl font-semibold text-[#1a1a1a]">Sources</h3>

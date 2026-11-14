@@ -25,7 +25,8 @@ export interface Recommendation {
  * Matches a selection against the curated preparations.
  *
  * A preparation is suggested when at least one selected ingredient fills one
- * of its components. Results are ordered by:
+ * of its required components. Optional extras alone (a herb, say) never
+ * surface an idea on their own. Results are ordered by:
  * 1. fewest missing required components (ready-to-make first)
  * 2. most selected ingredients used
  * 3. the curated order of PREPARATIONS
@@ -47,7 +48,8 @@ export function recommend(
     }));
 
     const usedIds = [...new Set(components.flatMap((match) => match.matchedIds))];
-    if (usedIds.length === 0) return;
+    const fillsRequired = components.some((match) => !match.component.optional && match.matchedIds.length > 0);
+    if (!fillsRequired) return;
 
     const missing = components
       .filter((match) => !match.component.optional && match.matchedIds.length === 0)
