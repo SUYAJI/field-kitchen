@@ -1,152 +1,88 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useRef, useState, type RefObject } from "react";
 import { motion as Motion, AnimatePresence } from "motion/react";
-import { X, Calendar, Flame, Droplets, Beaker, Sprout, Wind, Link2, MapPin, Leaf } from "lucide-react";
-import { getIngredientByPairingLabel, INGREDIENTS, Ingredient, MONTH_INITIALS, PrepMethod, Region } from "../data";
+import { ArrowUpRight, Check, Plus, X } from "lucide-react";
+import { fdcUrl, INGREDIENT_CATEGORIES, INGREDIENTS, MONTH_INITIALS, MONTHS, type Ingredient, type IngredientId } from "../data";
+import { preparationsUsing } from "../recommend";
 import { useMediaQuery, useOverlayFocus } from "../accessibility";
+import { CURRENT_MONTH, ProvenanceBadge, SourceLink } from "../components";
 
-const PrepIcon = ({ type, className }: { type: PrepMethod; className?: string }) => {
-  switch (type) {
-    case 'Roasted': return <Flame className={`w-3.5 h-3.5 ${className}`} />;
-    case 'Steamed': return <Droplets className={`w-3.5 h-3.5 ${className}`} />;
-    case 'Fermented': return <Beaker className={`w-3.5 h-3.5 ${className}`} />;
-    case 'Simmered': return <Droplets className={`w-3.5 h-3.5 ${className}`} />;
-    case 'Raw': return <Sprout className={`w-3.5 h-3.5 ${className}`} />;
-    case 'Pickled': return <Beaker className={`w-3.5 h-3.5 ${className}`} />;
-    case 'Ground': return <Wind className={`w-3.5 h-3.5 ${className}`} />;
-    case 'Soaked': return <Droplets className={`w-3.5 h-3.5 ${className}`} />;
-    default: return <Sprout className={`w-3.5 h-3.5 ${className}`} />;
-  }
-};
+interface IngredientLibraryProps {
+  selectedIds: IngredientId[];
+  onToggle: (id: IngredientId) => void;
+  onOpenKitchen: () => void;
+}
 
-export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "All" }) {
-  const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
+export function IngredientLibrary({ selectedIds, onToggle, onOpenKitchen }: IngredientLibraryProps) {
+  const [detail, setDetail] = useState<Ingredient | null>(null);
   const detailPanelRef = useRef<HTMLElement>(null);
   const detailCloseRef = useRef<HTMLButtonElement>(null);
   const detailTriggerRef = useRef<HTMLElement | null>(null);
   const isModalDetail = useMediaQuery("(max-width: 1023px)");
 
   useOverlayFocus({
-    open: Boolean(selectedIngredient),
+    open: Boolean(detail),
     containerRef: detailPanelRef,
     initialFocusRef: detailCloseRef,
     restoreFocusRef: detailTriggerRef,
-    onClose: () => setSelectedIngredient(null),
+    onClose: () => setDetail(null),
     trapFocus: isModalDetail,
   });
 
-  const filteredIngredients = useMemo(() => {
-    return INGREDIENTS.filter(
-      (item) => activeRegion === "All" || item.region.includes(activeRegion as Region)
-    );
-  }, [activeRegion]);
-
-  useEffect(() => {
-    if (selectedIngredient && !filteredIngredients.some((ingredient) => ingredient.id === selectedIngredient.id)) {
-      setSelectedIngredient(null);
-    }
-  }, [filteredIngredients, selectedIngredient]);
-
   return (
-    <div className="w-full min-h-0 flex overflow-visible relative lg:h-full lg:overflow-hidden">
-      <div className={`flex-1 transition-all duration-700 ease-[0.16,1,0.3,1] ${selectedIngredient ? 'lg:pr-[440px]' : ''} overflow-visible p-5 sm:p-6 lg:overflow-y-auto lg:p-10`}>
-        <h2 className="sr-only">Ingredient Library</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pb-20">
-          <AnimatePresence>
-            {filteredIngredients.map((ingredient, idx) => {
-              const pairingStrength = ingredient.pairings.length;
-              return (
-                <Motion.button
-                  type="button"
-                  key={ingredient.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.5, delay: idx * 0.04, ease: "easeOut" }}
-                  whileHover="hover"
-                  whileFocus="hover"
-                  whileTap={{ scale: 0.97 }}
-                  onClick={(event) => {
-                    detailTriggerRef.current = event.currentTarget;
-                    setSelectedIngredient(ingredient);
-                  }}
-                  aria-expanded={selectedIngredient?.id === ingredient.id}
-                  aria-controls="ingredient-detail-panel"
-                  aria-label={`${ingredient.name}, ${ingredient.seasons.join(' and ')}, ${ingredient.region.join(', ')}. Open ingredient details.`}
-                  className={`group relative h-[300px] sm:h-[340px] w-full text-left bg-white/40 backdrop-blur-md border border-black/5 rounded-2xl flex flex-col justify-between cursor-pointer overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/50 focus-visible:ring-offset-2 ${selectedIngredient?.id === ingredient.id ? 'ring-2 ring-black/20 shadow-2xl' : ''}`}
-                >
-                  {/* Keep the image visible at rest; hover and focus shift contrast. */}
-                  <div 
-                    className="absolute inset-0 bg-cover bg-center opacity-75 transition-all duration-700 group-hover:scale-105 group-hover:opacity-100 group-focus-visible:scale-105 group-focus-visible:opacity-100"
-                    style={{ 
-                      backgroundImage: `url(${ingredient.image})`,
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#faf9f6] via-[#faf9f6]/80 to-white/30 transition-opacity duration-500 group-hover:opacity-0 group-focus-visible:opacity-0" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-focus-visible:opacity-100" />
+    <div className="relative flex w-full min-h-0 overflow-visible lg:h-full lg:overflow-hidden">
+      <section
+        aria-labelledby="ingredients-heading"
+        className={`flex-1 overflow-visible px-5 pb-16 pt-6 transition-[padding] duration-500 sm:px-6 lg:overflow-y-auto lg:px-10 lg:pt-8 ${detail ? "lg:pr-[460px]" : ""}`}
+      >
+        <h2 id="ingredients-heading" className="font-['Playfair_Display'] text-4xl font-semibold tracking-[-0.02em] text-[#1a1a1a] md:text-5xl">
+          Ingredients
+        </h2>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-black/70 md:text-base">
+          Reference details for every ingredient: USDA nutrition records, Oregon availability where a source exists, and the ideas each one appears in.
+        </p>
 
-                  <header className="relative z-10 p-5 flex justify-between items-start">
-                    <div className="flex flex-col gap-1.5">
-                      <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-widest font-semibold text-black/50 group-hover:text-white/80 group-focus-visible:text-white/80 transition-colors duration-500 bg-black/[0.03] group-hover:bg-white/10 group-focus-visible:bg-white/10 px-2 py-0.5 rounded-full w-fit">
-                        <Leaf className="w-2.5 h-2.5" />
-                        {ingredient.seasons.join(' / ')}
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-widest font-semibold text-black/40 group-hover:text-white/70 group-focus-visible:text-white/70 transition-colors duration-500">
-                        <MapPin className="w-2.5 h-2.5" />
-                        {ingredient.region[0]}
-                      </span>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: ingredient.color }} />
-                        <span className="text-[9px] font-semibold tracking-wider uppercase text-black/40 group-hover:text-white/70 group-focus-visible:text-white/70 transition-colors">
-                          ND {ingredient.nutrientDensity}
-                        </span>
-                      </div>
-                      <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-widest font-semibold text-black/30 group-hover:text-white/60 group-focus-visible:text-white/60 transition-colors">
-                        <Link2 className="w-2.5 h-2.5" />
-                        {pairingStrength}
-                      </span>
-                    </div>
-                  </header>
-
-                  <div className="relative z-10 p-5 mt-auto">
-                    <span className="block font-['Playfair_Display'] text-4xl font-semibold tracking-tight text-[#1a1a1a] mb-1 group-hover:text-white group-focus-visible:text-white transition-colors duration-500">
-                      {ingredient.name}
-                    </span>
-                    <Motion.div 
-                      variants={{
-                        hover: { opacity: 1, x: 0 },
-                        initial: { opacity: 0, x: -8 }
+        {INGREDIENT_CATEGORIES.map((category) => {
+          const items = INGREDIENTS.filter((item) => item.category === category);
+          return (
+            <div key={category} className="mt-8">
+              <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/60">{category}</h3>
+              <ul className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
+                {items.map((ingredient) => (
+                  <li key={ingredient.id}>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        detailTriggerRef.current = event.currentTarget;
+                        setDetail(ingredient);
                       }}
-                      initial="initial"
-                      transition={{ duration: 0.3 }}
-                      className="text-[10px] font-['Space_Grotesk'] text-white/80 tracking-widest uppercase"
+                      aria-expanded={detail?.id === ingredient.id}
+                      aria-controls="ingredient-detail-panel"
+                      aria-label={`${ingredient.name}. Open ingredient details.`}
+                      className={`group flex w-full items-center gap-3 rounded-xl border bg-white/70 p-2 text-left transition-all duration-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a1a1a] ${detail?.id === ingredient.id ? "border-black/40 shadow-md" : "border-black/10"}`}
                     >
-                      View Structure →
-                    </Motion.div>
-                  </div>
-
-                  <footer className="relative z-10 px-5 pb-4 flex justify-between items-center text-black/40 group-hover:text-white/60 group-focus-visible:text-white/60 transition-colors duration-500 pt-3 border-t border-black/5 group-hover:border-white/10 group-focus-visible:border-white/10 mx-2">
-                    <div className="flex gap-1.5">
-                      {ingredient.preparations.slice(0, 4).map((prep) => (
-                        <div key={prep} className="p-1 bg-black/[0.03] group-hover:bg-white/10 group-focus-visible:bg-white/10 rounded transition-colors" title={prep}>
-                          <PrepIcon type={prep} />
-                        </div>
-                      ))}
-                    </div>
-                    <span className="text-[9px] font-semibold tracking-widest uppercase" style={{ color: ingredient.color }}>
-                      {ingredient.sourceLayer}
-                    </span>
-                  </footer>
-                </Motion.button>
-              );
-            })}
-          </AnimatePresence>
-        </div>
-      </div>
+                      <span
+                        aria-hidden="true"
+                        className="h-14 w-14 shrink-0 rounded-lg bg-cover bg-center"
+                        style={{ backgroundImage: `url(${ingredient.image})`, backgroundColor: ingredient.color }}
+                      />
+                      <span className="flex min-w-0 flex-col">
+                        <span className="truncate font-['Playfair_Display'] text-lg font-semibold text-[#1a1a1a]">{ingredient.name}</span>
+                        <span className="text-xs text-black/60">
+                          {preparationsUsing(ingredient.id).length} {preparationsUsing(ingredient.id).length === 1 ? "idea" : "ideas"}
+                          {selectedIds.includes(ingredient.id) ? " · in your kitchen" : ""}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+      </section>
 
       <AnimatePresence>
-        {selectedIngredient && (
+        {detail && (
           <Motion.aside
             id="ingredient-detail-panel"
             ref={detailPanelRef}
@@ -157,146 +93,165 @@ export function IngredientLibrary({ activeRegion }: { activeRegion: Region | "Al
             initial={{ x: "100%", opacity: 0.5 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0 }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-0 h-dvh w-full bg-[#faf9f6]/95 backdrop-blur-2xl flex flex-col shadow-2xl overflow-y-auto z-[100] lg:absolute lg:inset-auto lg:top-0 lg:right-0 lg:h-full lg:max-w-[440px] lg:border-l lg:border-black/10"
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 z-[100] flex h-dvh w-full flex-col overflow-y-auto bg-[#faf9f6] shadow-2xl lg:absolute lg:inset-auto lg:right-0 lg:top-0 lg:h-full lg:max-w-[440px] lg:border-l lg:border-black/10"
           >
-            <div className="relative h-48 shrink-0 overflow-hidden">
-              <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${selectedIngredient.image})` }} />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#faf9f6] via-transparent to-transparent" />
-              <button 
-                ref={detailCloseRef}
-                type="button"
-                aria-label="Close ingredient details"
-                onClick={() => setSelectedIngredient(null)}
-                className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-md hover:bg-white rounded-full transition-colors z-10 min-w-11 min-h-11 flex items-center justify-center"
-              >
-                <X className="w-4 h-4 text-black/60" />
-              </button>
-            </div>
-
-            <div className="px-5 sm:px-8 pb-8 -mt-8 relative z-10 flex flex-col flex-1">
-              <h2 id="ingredient-detail-title" className="font-['Playfair_Display'] text-4xl sm:text-5xl tracking-[-0.02em] font-semibold mb-1 text-[#1a1a1a]">
-                {selectedIngredient.name}
-              </h2>
-              <p className="text-[10px] tracking-widest uppercase text-black/50 font-semibold mb-8">
-                {selectedIngredient.originTag} · {selectedIngredient.sourceLayer} · {selectedIngredient.region.join(', ')}
-              </p>
-
-              <div className="space-y-8 flex-1">
-                <div className="space-y-3">
-                  <span className="text-[10px] uppercase tracking-widest font-semibold text-black/40 flex items-center gap-2">
-                    <Calendar className="w-3 h-3" /> Harvest Window
-                  </span>
-                  <div className="flex gap-[2px] h-7 rounded-lg overflow-hidden bg-black/5">
-                    {[...Array(12)].map((_, i) => {
-                      const [s, e] = selectedIngredient.harvestWindow;
-                      const isActive = s <= e ? i >= s && i <= e : i >= s || i <= e;
-                      return (
-                        <Motion.div 
-                          key={i}
-                          initial={{ opacity: 0, scaleY: 0 }}
-                          animate={{ opacity: isActive ? 1 : 0.15, scaleY: 1 }}
-                          transition={{ duration: 0.4, delay: 0.1 + i * 0.03 }}
-                          className="flex-1 h-full origin-bottom flex items-end justify-center"
-                          style={{ backgroundColor: isActive ? selectedIngredient.color : 'transparent' }}
-                        >
-                          <span className="text-[7px] font-semibold text-black/20 mb-0.5">{MONTH_INITIALS[i]}</span>
-                        </Motion.div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <span className="text-[10px] uppercase tracking-widest font-semibold text-black/40 flex items-center gap-2">
-                    <Link2 className="w-3 h-3" /> Pairing Network
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedIngredient.pairings.map((p) => {
-                      const paired = getIngredientByPairingLabel(p);
-                      return (
-                        <button
-                          type="button"
-                          key={p}
-                          onClick={() => paired && setSelectedIngredient(paired)}
-                          className="flex items-center gap-2 px-3 py-1.5 bg-white/60 border border-black/5 rounded-full text-xs hover:border-black/20 transition-colors group/pair min-h-11"
-                        >
-                          {paired && <div className="w-2 h-2 rounded-full" style={{ backgroundColor: paired.color }} />}
-                          <span className="text-black/70 group-hover/pair:text-black">{p}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <span className="text-[10px] uppercase tracking-widest font-semibold text-black/40">Nutrient Density Matrix</span>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { label: 'Protein', val: selectedIngredient.nutrients.protein },
-                      { label: 'Mineral', val: selectedIngredient.nutrients.mineral },
-                      { label: 'Fiber', val: selectedIngredient.nutrients.fiber },
-                      { label: 'Digestibility', val: selectedIngredient.nutrients.digestibility },
-                    ].map((nut, i) => (
-                      <div key={nut.label} className="bg-white/70 p-3 border border-black/5 rounded-xl">
-                        <div className="text-[9px] uppercase tracking-widest text-black/40 mb-2">{nut.label}</div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 h-1.5 bg-black/5 rounded-full overflow-hidden">
-                            <Motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${nut.val}%` }}
-                              transition={{ duration: 0.8, delay: 0.2 + i * 0.1, ease: "easeOut" }}
-                              className="h-full rounded-full"
-                              style={{ backgroundColor: selectedIngredient.color }}
-                            />
-                          </div>
-                          <span className="font-['Playfair_Display'] text-lg tabular-nums">{nut.val}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <span className="text-[10px] uppercase tracking-widest font-semibold text-black/40">Preparation Techniques</span>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedIngredient.preparations.map((p) => (
-                      <div key={p} className="flex items-center gap-2 px-3 py-1.5 bg-white/60 border border-black/5 rounded-full text-xs text-black/70">
-                        <PrepIcon type={p} className="text-black/40" />
-                        {p}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <span className="text-[10px] uppercase tracking-widest font-semibold text-black/40 flex items-center gap-2">
-                    <MapPin className="w-3 h-3" /> Regional Sourcing
-                  </span>
-                  <div className="bg-white/60 border border-black/5 rounded-xl p-4 space-y-2">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-black/50">Origin</span>
-                      <span className="text-black/80">{selectedIngredient.originTag}</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-black/50">Source Layer</span>
-                      <span className="text-black/80">{selectedIngredient.sourceLayer}</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-black/50">Regions</span>
-                      <span className="text-black/80">{selectedIngredient.region.join(', ')}</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-black/50">Local Priority</span>
-                      <span style={{ color: selectedIngredient.color }}>{selectedIngredient.localPriority}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <IngredientDetail
+              ingredient={detail}
+              inKitchen={selectedIds.includes(detail.id)}
+              closeRef={detailCloseRef}
+              onClose={() => setDetail(null)}
+              onToggle={() => onToggle(detail.id)}
+              onOpenKitchen={onOpenKitchen}
+            />
           </Motion.aside>
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+function IngredientDetail({
+  ingredient,
+  inKitchen,
+  closeRef,
+  onClose,
+  onToggle,
+  onOpenKitchen,
+}: {
+  ingredient: Ingredient;
+  inKitchen: boolean;
+  closeRef: RefObject<HTMLButtonElement>;
+  onClose: () => void;
+  onToggle: () => void;
+  onOpenKitchen: () => void;
+}) {
+  const { availability, nutrition } = ingredient;
+  const uses = preparationsUsing(ingredient.id);
+
+  return (
+    <>
+      <div className="relative h-44 shrink-0 overflow-hidden">
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${ingredient.image})`, backgroundColor: ingredient.color }} />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#faf9f6] via-transparent to-transparent" />
+        <button
+          ref={closeRef}
+          type="button"
+          aria-label="Close ingredient details"
+          onClick={onClose}
+          className="absolute right-4 top-4 z-10 flex min-h-11 min-w-11 items-center justify-center rounded-full bg-white/85 backdrop-blur-md transition-colors hover:bg-white"
+        >
+          <X className="h-4 w-4 text-black/70" />
+        </button>
+      </div>
+
+      <div className="relative z-10 -mt-6 flex flex-1 flex-col gap-7 px-5 pb-8 sm:px-7">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/60">{ingredient.category}</p>
+          <h2 id="ingredient-detail-title" className="font-['Playfair_Display'] text-4xl font-semibold tracking-[-0.02em] text-[#1a1a1a]">
+            {ingredient.name}
+          </h2>
+          {ingredient.note && <p className="mt-2 text-sm leading-relaxed text-black/75">{ingredient.note}</p>}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={onToggle}
+              aria-pressed={inKitchen}
+              className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors ${inKitchen ? "bg-[#1a1a1a] text-[#faf9f6]" : "border border-black/20 bg-white text-black/80 hover:border-black/40"}`}
+            >
+              {inKitchen ? <Check aria-hidden="true" className="h-4 w-4" /> : <Plus aria-hidden="true" className="h-4 w-4" />}
+              {inKitchen ? "In your kitchen" : "Add to your kitchen"}
+            </button>
+            {inKitchen && (
+              <button type="button" onClick={onOpenKitchen} className="min-h-11 px-2 text-sm font-semibold text-black/70 underline decoration-black/25 underline-offset-2 hover:text-black">
+                See ideas
+              </button>
+            )}
+          </div>
+        </div>
+
+        <section aria-labelledby="availability-heading">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 id="availability-heading" className="text-[11px] font-semibold uppercase tracking-[0.15em] text-black/60">Oregon availability</h3>
+            {availability ? <ProvenanceBadge level="sourced" /> : null}
+          </div>
+          {availability ? (
+            <>
+              <div className="mt-3 grid grid-cols-12 gap-[3px]" aria-label={`Available ${availability.months.map((month) => MONTHS[month]).join(", ")}`} role="img">
+                {MONTHS.map((month, index) => {
+                  const active = availability.months.includes(index);
+                  return (
+                    <div key={month} className="flex flex-col items-center gap-1">
+                      <div className={`h-6 w-full rounded-sm ${index === CURRENT_MONTH ? "ring-2 ring-[#1a1a1a] ring-offset-1" : ""}`} style={{ backgroundColor: active ? ingredient.color : "rgba(0,0,0,0.06)" }} />
+                      <span className={`text-[10px] font-semibold ${index === CURRENT_MONTH ? "text-black" : "text-black/55"}`}>{MONTH_INITIALS[index]}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="mt-3 text-xs leading-relaxed text-black/65">Outlined month is the current month. The chart does not distinguish fresh harvest from storage.</p>
+              <div className="mt-2"><SourceLink id={availability.sourceId} /></div>
+            </>
+          ) : (
+            <p className="mt-3 rounded-xl border border-dashed border-black/20 p-3 text-sm text-black/70">
+              Not shown: no verified regional availability source yet.
+            </p>
+          )}
+        </section>
+
+        <section aria-labelledby="nutrition-heading">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 id="nutrition-heading" className="text-[11px] font-semibold uppercase tracking-[0.15em] text-black/60">Nutrition per 100 g</h3>
+            {nutrition ? <ProvenanceBadge level="sourced" /> : null}
+          </div>
+          {nutrition ? (
+            <>
+              <dl className="mt-3 grid grid-cols-2 gap-2">
+                {[
+                  ["Energy", `${nutrition.energyKcal} kcal`],
+                  ["Protein", `${nutrition.proteinG} g`],
+                  ["Fiber", `${nutrition.fiberG} g`],
+                  ["Vitamin C", nutrition.vitaminCMg === null ? "Not reported" : `${nutrition.vitaminCMg} mg`],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-xl border border-black/10 bg-white/80 p-3">
+                    <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-black/60">{label}</dt>
+                    <dd className="mt-1 font-['Playfair_Display'] text-xl tabular-nums text-[#1a1a1a]">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="mt-3 text-xs leading-relaxed text-black/65">
+                USDA record: <span className="font-semibold text-black/75">{nutrition.description}</span> (FDC {nutrition.fdcId}). Values describe this record only, not every variety or preparation.
+              </p>
+              <a
+                href={fdcUrl(nutrition.fdcId)}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 inline-flex items-center gap-1 text-xs text-black/70 underline decoration-black/20 underline-offset-2 hover:text-black"
+              >
+                View on USDA FoodData Central <ArrowUpRight aria-hidden="true" className="h-3 w-3" />
+                <span className="sr-only">(opens in a new tab)</span>
+              </a>
+            </>
+          ) : (
+            <p className="mt-3 rounded-xl border border-dashed border-black/20 p-3 text-sm text-black/70">
+              Not shown: no matching USDA FoodData Central record.
+            </p>
+          )}
+        </section>
+
+        <section aria-labelledby="uses-heading">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 id="uses-heading" className="text-[11px] font-semibold uppercase tracking-[0.15em] text-black/60">Used in</h3>
+          </div>
+          <ul className="mt-3 flex flex-col gap-2">
+            {uses.map((preparation) => (
+              <li key={preparation.id} className="flex items-center justify-between gap-3 rounded-xl border border-black/10 bg-white/80 px-3 py-2.5">
+                <span className="font-['Playfair_Display'] text-lg text-[#1a1a1a]">{preparation.name}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-black/60">{preparation.category}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+    </>
   );
 }

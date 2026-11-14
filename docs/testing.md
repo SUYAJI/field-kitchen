@@ -52,19 +52,18 @@ Playwright automatically starts and stops the local Vite server. Successful runs
 
 ## Manual testing checklist
 
-1. Confirm the Landing screen loads.
-2. Open Ingredient Library and select an ingredient.
-3. Change the region filter and confirm the visible ingredients and detail state remain consistent.
-4. Open Pairing Field, select an ingredient, and apply a preparation filter.
-5. Inspect Seasonal Map and its intentional horizontal timeline scrolling.
-6. Inspect Source Map details using click or tap rather than hover alone.
-7. Inspect Nutrient View details using click or tap.
-8. Open Preparation Guide and check both cards and the horizontally scrollable matrix.
-9. Narrow the browser or use mobile emulation and check the changed feature.
-10. Use keyboard focus to open one ingredient detail, then close it with Escape and confirm focus returns.
-11. Optionally enable reduced motion and confirm the Seasonal Map sweep stops.
+1. Confirm the landing page explains the product and **Choose ingredients** opens the Kitchen.
+2. Select two or three ingredients and confirm ideas appear, with ready-to-make ideas first.
+3. Open an idea and check the method, the ingredients you still need, the pantry staples, the basis and the source links.
+4. Remove an ingredient, or add one with a **+ ingredient** button inside an idea, and confirm the ideas update.
+5. Use **Copy idea** and paste the result somewhere to check the plain text.
+6. Open Ingredients, then an ingredient detail. Check the USDA record, Oregon availability (or "Not shown") and the links.
+7. Open Seasons. Confirm the current month is marked "Now" and, on a phone width, that the timeline opens near the current month.
+8. Open Sources and confirm every source link opens.
+9. Narrow the browser or use mobile emulation, and check the **See ideas** bar on the Kitchen.
+10. Use the keyboard to select ingredients (Space or Enter) and to open and close an ingredient detail with Escape.
 
-For future changes, manually inspect the changed feature and directly related interface. The automated suite covers the main application, state, accessibility, motion, and overflow regressions.
+For future changes, manually inspect the changed feature and directly related interface. The automated suite covers the recommendation logic, the main workflow, copying, keyboard use, dialogs and mobile overflow.
 
 ## Before committing future changes
 

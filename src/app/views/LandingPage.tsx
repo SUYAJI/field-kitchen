@@ -1,270 +1,120 @@
-import { useRef, useState } from "react";
-import { motion as Motion, AnimatePresence, useReducedMotion } from "motion/react";
-import { ArrowRight, X, Database } from "lucide-react";
-import {
-  ACTIVE_SOURCE_LAYERS,
-  DATASET_SUMMARY,
-  INGREDIENTS,
-  MONTHS,
-  NUTRIENT_METRICS,
-  PREPARATION_METHODS,
-  REGIONS,
-  SEASON_MONTHS,
-  SEASONS,
-  SUPPORTED_SOURCE_LAYERS,
-} from "../data";
-import { useOverlayFocus } from "../accessibility";
+import { motion as Motion, useReducedMotion } from "motion/react";
+import { ArrowRight } from "lucide-react";
+import { INGREDIENTS } from "../data";
+import { PREPARATIONS } from "../preparations";
+import { IngredientThumb } from "../components";
 
-const DATASET_DETAILS = [
-  { label: "Primary Ingredients", value: INGREDIENTS.map((ingredient) => ingredient.name).join(', ') },
-  { label: "Ecological Regions", value: REGIONS.join(', ') },
-  { label: "Preparation Techniques", value: PREPARATION_METHODS.map((method) => method.label).join(', ') },
-  { label: "Nutrient Axes", value: NUTRIENT_METRICS.map((metric) => metric.label).join(', ') },
-  { label: "Supported Source Layers", value: SUPPORTED_SOURCE_LAYERS.join(', ') },
-  { label: "Active Source Layers", value: ACTIVE_SOURCE_LAYERS.join(', ') },
-  {
-    label: "Seasonal Windows",
-    value: SEASONS.map((season) => {
-      const months = SEASON_MONTHS[season];
-      return `${season} (${MONTHS[months[0]]}–${MONTHS[months[months.length - 1]]})`;
-    }).join(', '),
-  },
-  { label: "Habitat Contexts", value: [...new Set(INGREDIENTS.map((ingredient) => ingredient.originTag))].join(', ') },
+const STEPS = [
+  { title: "Choose", text: "Select the ingredients you have." },
+  { title: "Compare", text: "See what you could make, and what else each idea needs." },
+  { title: "Take away", text: "Open a method and copy it to your prep list." },
 ];
 
-export function LandingPage({ onEnter }: { onEnter: () => void }) {
-  const [datasetOpen, setDatasetOpen] = useState(false);
-  const shouldReduceMotion = useReducedMotion();
-  const datasetTriggerRef = useRef<HTMLButtonElement>(null);
-  const datasetPanelRef = useRef<HTMLElement>(null);
-  const datasetCloseRef = useRef<HTMLButtonElement>(null);
+const PREVIEW_IDS = ["potato", "mushroom", "apple", "carrot", "hazelnut", "kale"];
 
-  useOverlayFocus({
-    open: datasetOpen,
-    containerRef: datasetPanelRef,
-    initialFocusRef: datasetCloseRef,
-    restoreFocusRef: datasetTriggerRef,
-    onClose: () => setDatasetOpen(false),
-    trapFocus: true,
-  });
+export function LandingPage({ onStart, onOpenSources }: { onStart: () => void; onOpenSources: () => void }) {
+  const shouldReduceMotion = useReducedMotion();
+  const everydayCount = INGREDIENTS.filter((item) => item.category !== "Specialty & botanicals").length;
+  const specialtyCount = INGREDIENTS.length - everydayCount;
 
   return (
     <div className="relative w-full min-h-dvh flex flex-col justify-start lg:justify-center items-center overflow-x-hidden p-6 md:p-12 text-[#0d2110] selection:bg-[#e76f51]/30 lg:h-full lg:overflow-y-auto">
-      <div className="absolute inset-0 pointer-events-none opacity-80 mix-blend-multiply overflow-hidden z-0">
-        <div 
-          className="absolute inset-0 opacity-[0.04]" 
+      <div aria-hidden="true" className="absolute inset-0 pointer-events-none opacity-80 mix-blend-multiply overflow-hidden z-0">
+        <div
+          className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}
         />
-        <Motion.div 
+        <Motion.div
           animate={shouldReduceMotion ? undefined : { scale: [1, 1.05, 1], rotate: [0, 2, -2, 0] }}
           transition={shouldReduceMotion ? undefined : { duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-[20%] -right-[10%] w-[80vw] h-[80vw] max-w-[1200px] max-h-[1200px] rounded-full bg-[#bc6c25] blur-[140px] mix-blend-multiply opacity-20" 
+          className="absolute -top-[20%] -right-[10%] w-[80vw] h-[80vw] max-w-[1200px] max-h-[1200px] rounded-full bg-[#bc6c25] blur-[140px] opacity-20"
         />
-        <Motion.div 
+        <Motion.div
           animate={shouldReduceMotion ? undefined : { scale: [1, 1.1, 1], rotate: [0, -3, 3, 0] }}
           transition={shouldReduceMotion ? undefined : { duration: 30, repeat: Infinity, ease: "linear", delay: 2 }}
-          className="absolute -bottom-[20%] -left-[10%] w-[90vw] h-[90vw] max-w-[1400px] max-h-[1400px] rounded-full bg-[#2a9d8f] blur-[160px] mix-blend-multiply opacity-15" 
-        />
-        <Motion.div 
-          animate={shouldReduceMotion ? undefined : { x: [0, 30, -30, 0], y: [0, -20, 20, 0] }}
-          transition={shouldReduceMotion ? undefined : { duration: 35, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[40%] left-[30%] w-[50vw] h-[50vw] max-w-[700px] max-h-[700px] rounded-full bg-[#e76f51] blur-[120px] mix-blend-multiply opacity-10" 
+          className="absolute -bottom-[20%] -left-[10%] w-[90vw] h-[90vw] max-w-[1400px] max-h-[1400px] rounded-full bg-[#2a9d8f] blur-[160px] opacity-15"
         />
       </div>
 
-      <main className="relative z-10 w-full max-w-[1400px] flex flex-col lg:flex-row justify-between items-start lg:items-end gap-12 lg:gap-8 h-auto py-8 md:py-12 lg:h-full lg:py-24">
-        
-        <div className="flex flex-col h-auto lg:h-full justify-between max-w-2xl w-full">
-          <header>
-            <Motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, ease: "easeOut" }}
-              className="text-[10px] md:text-xs font-semibold tracking-[0.3em] uppercase text-black/50 mb-8"
-            >
-              Pacific Northwest Edition
-            </Motion.div>
-            <Motion.h1 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="font-['Playfair_Display'] text-[12vw] leading-[0.85] tracking-[-0.04em] md:text-[8vw] lg:text-[10rem] font-semibold uppercase text-[#0d2110]"
-            >
-              Field <br/>
-              <span className="italic text-black/80">Kitchen</span>
-            </Motion.h1>
-          </header>
-
-          <Motion.div 
+      <main className="relative z-10 w-full max-w-[1300px] grid gap-12 py-6 md:py-10 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-end lg:gap-16">
+        <div className="flex flex-col">
+          <Motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="text-[11px] md:text-xs font-semibold tracking-[0.25em] uppercase text-black/60 mb-6"
+          >
+            Pacific Northwest Edition · Proof of concept
+          </Motion.p>
+          <Motion.h1
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="font-['Playfair_Display'] text-[17vw] leading-[0.85] tracking-[-0.04em] sm:text-[12vw] lg:text-[7rem] xl:text-[8rem] font-semibold uppercase text-[#0d2110]"
+          >
+            Field <br />
+            <span className="italic text-black/80">Kitchen</span>
+          </Motion.h1>
+          <Motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.8 }}
-            className="mt-12 lg:mt-24 max-w-md"
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="mt-8 max-w-xl"
           >
-            <p className="font-['Space_Grotesk'] text-sm md:text-base leading-relaxed text-black/60 mb-4">
-              FIELD KITCHEN is a spatial ingredient intelligence interface designed to help cooks and researchers explore seasonal availability, regional sourcing relationships, and preparation compatibility across Pacific Northwest food systems.
+            <p className="font-['Playfair_Display'] text-3xl md:text-4xl leading-tight text-[#1a1a1a]">
+              Make more of what&rsquo;s in your kitchen.
             </p>
-            <p className="font-['Space_Grotesk'] text-sm md:text-base leading-relaxed text-black/40 mb-8">
-              Navigate harvest windows, nutrient topographies, and technique-driven compatibility networks across {DATASET_SUMMARY.regionCount} bioregions and {DATASET_SUMMARY.ingredientCount} primary ingredients.
+            <p className="mt-4 text-base leading-relaxed text-black/70">
+              Choose the ingredients you have on hand. Field Kitchen suggests dishes, sides, drinks and preserves you can make from them, with a short method, what else you&rsquo;ll need, and where each idea comes from.
             </p>
-            
-            <div className="flex flex-col gap-4">
-              <button 
-                type="button"
-                onClick={onEnter}
-                className="group flex items-center gap-4 text-xs font-semibold tracking-[0.2em] uppercase text-black pb-2 border-b border-black/20 hover:border-black transition-colors duration-500 w-fit min-h-11"
-              >
-                Enter System
-                <ArrowRight className="w-4 h-4 transition-transform duration-500 group-hover:translate-x-2" />
-              </button>
-
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
               <button
-                ref={datasetTriggerRef}
                 type="button"
-                onClick={() => setDatasetOpen(true)}
-                aria-haspopup="dialog"
-                aria-expanded={datasetOpen}
-                aria-controls="dataset-index-panel"
-                className="group flex items-center gap-3 text-[10px] font-semibold tracking-[0.15em] uppercase text-black/50 hover:text-black/70 transition-colors duration-500 w-fit mt-4 min-h-11"
+                onClick={onStart}
+                className="group inline-flex min-h-12 items-center gap-3 rounded-full bg-[#1a1a1a] px-7 text-sm font-semibold tracking-wide text-[#faf9f6] shadow-lg transition-colors hover:bg-black"
               >
-                <Database className="w-3 h-3" />
-                Dataset: Pacific Northwest Field Index
+                Choose ingredients
+                <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+              </button>
+              <button
+                type="button"
+                onClick={onOpenSources}
+                className="min-h-11 text-sm font-semibold text-black/70 underline decoration-black/25 underline-offset-4 hover:text-black"
+              >
+                How the data works
               </button>
             </div>
           </Motion.div>
         </div>
 
-        <Motion.div 
-          initial={{ opacity: 0, x: 20 }}
+        <Motion.aside
+          aria-label="About this edition"
+          initial={{ opacity: 0, x: 16 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 1.2, delay: 0.5, ease: "easeOut" }}
-          className="flex flex-col gap-10 lg:gap-12 lg:pb-12 text-right lg:text-left self-end lg:self-stretch justify-end"
+          transition={{ duration: 0.9, delay: 0.5, ease: "easeOut" }}
+          className="flex flex-col gap-8 rounded-3xl border border-black/10 bg-white/55 p-6 backdrop-blur-md md:p-8"
         >
-          <div className="space-y-2">
-            <div className="text-[10px] uppercase tracking-[0.2em] font-semibold text-black/40">Region Index</div>
-            {REGIONS.map((r, i) => (
-              <Motion.div 
-                key={r}
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.8 + i * 0.1, duration: 0.6 }}
-                className="font-['Playfair_Display'] text-xl italic text-black/80"
-              >
-                {r}
-              </Motion.div>
+          <ol className="flex flex-col gap-5">
+            {STEPS.map((step, index) => (
+              <li key={step.title} className="flex gap-4">
+                <span aria-hidden="true" className="font-['Playfair_Display'] text-3xl italic leading-none text-[#b5401f]">{index + 1}</span>
+                <span>
+                  <span className="block font-semibold text-[#1a1a1a]">{step.title}</span>
+                  <span className="block text-sm text-black/70">{step.text}</span>
+                </span>
+              </li>
             ))}
-          </div>
-
-          <div className="space-y-3">
-            <div className="text-[10px] uppercase tracking-[0.2em] font-semibold text-black/40">System Metadata</div>
-            <div className="flex flex-col gap-1.5">
-              {[
-                { label: "Active Nodes", value: DATASET_SUMMARY.ingredientCount },
-                { label: "Technique Assignments", value: DATASET_SUMMARY.preparationAssignmentCount },
-                { label: "Pairing Connections", value: DATASET_SUMMARY.uniqueUndirectedPairingCount },
-                { label: "Nutrient Axes", value: DATASET_SUMMARY.nutrientAxisCount },
-              ].map((item, i) => (
-                <Motion.div
-                  key={item.label}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 1.2 + i * 0.08 }}
-                  className="flex items-center gap-3 text-xs"
-                >
-                  <span className="text-black/30 font-semibold tracking-widest uppercase text-[10px]">{item.label}</span>
-                  <span className="h-px flex-1 bg-black/10" />
-                  <span className="font-['Space_Grotesk'] text-black/70 tabular-nums">{item.value}</span>
-                </Motion.div>
-              ))}
+          </ol>
+          <div className="border-t border-black/10 pt-6">
+            <div className="flex -space-x-2">
+              {PREVIEW_IDS.map((id) => <IngredientThumb key={id} id={id} size={40} />)}
             </div>
+            <p className="mt-4 text-sm leading-relaxed text-black/70">
+              {everydayCount} everyday ingredients and {specialtyCount} regional specialties · {PREPARATIONS.length} preparation ideas · nutrition from USDA FoodData Central and availability from an Oregon Department of Education chart.
+            </p>
           </div>
-        </Motion.div>
+        </Motion.aside>
       </main>
-
-      <AnimatePresence>
-        {datasetOpen && (
-          <>
-            <Motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[200]"
-              aria-hidden="true"
-              onClick={() => setDatasetOpen(false)}
-            />
-            <Motion.aside
-              id="dataset-index-panel"
-              ref={datasetPanelRef}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="dataset-index-title"
-              tabIndex={-1}
-              initial={{ x: "100%", opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: "100%", opacity: 0 }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed top-0 right-0 h-full w-full max-w-[520px] bg-[#faf9f6]/95 backdrop-blur-2xl border-l border-black/10 z-[201] flex flex-col shadow-2xl"
-            >
-              <div className="flex items-center justify-between p-5 sm:p-8 border-b border-black/10">
-                <div>
-                  <h2 id="dataset-index-title" className="font-['Playfair_Display'] text-2xl font-semibold tracking-tight">Dataset Index</h2>
-                  <span className="text-[10px] uppercase tracking-widest font-semibold text-black/40">Pacific Northwest Field Index</span>
-                </div>
-                <button ref={datasetCloseRef} type="button" aria-label="Close dataset index" onClick={() => setDatasetOpen(false)} className="p-2 hover:bg-black/5 rounded-full transition-colors min-w-11 min-h-11 flex items-center justify-center">
-                  <X className="w-5 h-5 text-black/50" />
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-5 sm:p-8">
-                <div className="grid grid-cols-3 gap-4 mb-10">
-                  {[
-                    { n: DATASET_SUMMARY.ingredientCount, l: "Ingredients" },
-                    { n: DATASET_SUMMARY.regionCount, l: "Regions" },
-                    { n: DATASET_SUMMARY.preparationMethodCount, l: "Techniques" },
-                    { n: DATASET_SUMMARY.nutrientAxisCount, l: "Nutrient Axes" },
-                    { n: DATASET_SUMMARY.uniqueUndirectedPairingCount, l: "Pairings" },
-                    { n: DATASET_SUMMARY.seasonalWindowCount, l: "Seasonal Windows" },
-                  ].map((s, i) => (
-                    <Motion.div
-                      key={s.l}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 + i * 0.05 }}
-                      className="bg-white/60 border border-black/5 rounded-xl p-4 flex flex-col items-center"
-                    >
-                      <span className="font-['Playfair_Display'] text-3xl font-semibold text-[#0d2110]">{s.n}</span>
-                      <span className="text-[9px] uppercase tracking-widest font-semibold text-black/40 mt-1 text-center">{s.l}</span>
-                    </Motion.div>
-                  ))}
-                </div>
-
-                <div className="space-y-6">
-                  {DATASET_DETAILS.map((d, i) => (
-                    <Motion.div
-                      key={d.label}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.3 + i * 0.06 }}
-                      className="border-b border-black/5 pb-4"
-                    >
-                      <div className="text-[10px] uppercase tracking-widest font-semibold text-black/40 mb-2">{d.label}</div>
-                      <p className="text-sm text-black/70 leading-relaxed">{d.value}</p>
-                    </Motion.div>
-                  ))}
-                </div>
-
-                <div className="mt-10 p-5 bg-[#2a9d8f]/5 border border-[#2a9d8f]/10 rounded-xl">
-                  <div className="text-[10px] uppercase tracking-widest font-semibold text-[#2a9d8f]/60 mb-2">Data Provenance</div>
-                  <p className="text-xs text-black/50 leading-relaxed">
-                    This prototype dataset uses modeled, illustrative values for harvest windows, nutrient profiles, sourcing, and pairing relationships. It demonstrates the interface and does not yet include field-level provenance or citations.
-                  </p>
-                </div>
-              </div>
-            </Motion.aside>
-          </>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

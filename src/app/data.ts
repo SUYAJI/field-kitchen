@@ -1,296 +1,439 @@
-export const REGIONS = ['Willamette Valley', 'Puget Sound', 'Olympic Peninsula', 'Cascade Range'] as const;
-export type Region = (typeof REGIONS)[number];
+/*
+ * Field Kitchen ingredient data.
+ *
+ * Every displayed fact carries one of three provenance levels:
+ * - sourced: supported by a specific reference in SOURCES
+ * - curated: an explicitly designed culinary recommendation
+ * - assumption: provisional prototype information (avoided wherever possible)
+ *
+ * Fields that could not be responsibly sourced are left null rather than
+ * filled with modeled values. See docs/data-model.md.
+ */
 
-export const SEASONS = ['Spring', 'Summer', 'Autumn', 'Winter'] as const;
-export type Season = (typeof SEASONS)[number];
+export type Provenance = 'sourced' | 'curated' | 'assumption';
 
-export const SUPPORTED_SOURCE_LAYERS = ['Local', 'Regional', 'Imported', 'Wild Foraged'] as const;
-export type SourceLayer = (typeof SUPPORTED_SOURCE_LAYERS)[number];
-
-export const PREPARATION_METHODS = [
-  { id: 'Roasted', label: 'Roast' },
-  { id: 'Steamed', label: 'Steam' },
-  { id: 'Fermented', label: 'Ferment' },
-  { id: 'Simmered', label: 'Simmer' },
-  { id: 'Raw', label: 'Raw' },
-  { id: 'Pickled', label: 'Pickle' },
-  { id: 'Ground', label: 'Grind' },
-  { id: 'Soaked', label: 'Soak' },
-] as const;
-export type PrepMethod = (typeof PREPARATION_METHODS)[number]['id'];
+export const PROVENANCE_LABELS: Record<Provenance, string> = {
+  sourced: 'Sourced fact',
+  curated: 'Curated recommendation',
+  assumption: 'Prototype assumption',
+};
 
 export const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
 export const MONTH_INITIALS = MONTHS.map((month) => month[0]);
 
-// Field Kitchen's internal season model uses zero-based month indices.
-export const SEASON_MONTHS: Record<Season, readonly number[]> = {
-  Spring: [2, 3, 4],
-  Summer: [5, 6, 7],
-  Autumn: [8, 9, 10],
-  Winter: [11, 0, 1],
-};
+export type SourceKind = 'nutrition' | 'availability' | 'culinary' | 'handling';
 
-export const NUTRIENT_METRICS = [
-  { key: 'protein', label: 'Protein Density' },
-  { key: 'mineral', label: 'Mineral Profile' },
-  { key: 'fiber', label: 'Fiber Structure' },
-  { key: 'digestibility', label: 'Digestibility Index' },
-] as const;
-export type NutrientKey = (typeof NUTRIENT_METRICS)[number]['key'];
+export interface Source {
+  id: string;
+  title: string;
+  publisher: string;
+  url: string;
+  kind: SourceKind;
+  /** What this source is used to support, in plain language. */
+  supports: string;
+  accessed: string;
+}
 
-// These ranges describe the prototype visualization model, not physical units.
-export const PROTOTYPE_INDEX_RANGES = {
-  nutrientDensity: { min: 1, max: 10 },
-  nutrientMetrics: { min: 0, max: 100 },
-} as const;
+const ACCESSED = '2026-11-14';
+
+export const SOURCES = {
+  'usda-fdc': {
+    id: 'usda-fdc',
+    title: 'FoodData Central (SR Legacy records)',
+    publisher: 'U.S. Department of Agriculture, Agricultural Research Service',
+    url: 'https://fdc.nal.usda.gov/',
+    kind: 'nutrition',
+    supports: 'Energy, protein, fiber and vitamin C per 100 g, for the specific food record linked on each ingredient.',
+    accessed: ACCESSED,
+  },
+  'ode-availability': {
+    id: 'ode-availability',
+    title: 'Oregon Fruit & Vegetable Availability Chart (Oregon Harvest for Schools, updated March 2017)',
+    publisher: 'Oregon Department of Education; chart adapted from the Agri-business Council of Oregon',
+    url: 'https://www.oregon.gov/ode/students-and-family/childnutrition/F2S/Documents/ohfs_instructions.pdf',
+    kind: 'availability',
+    supports: 'Months in which Oregon-grown product is marked as available. The chart does not distinguish fresh harvest from storage.',
+    accessed: ACCESSED,
+  },
+  'wiki-colcannon': {
+    id: 'wiki-colcannon',
+    title: 'Colcannon',
+    publisher: 'Wikipedia',
+    url: 'https://en.wikipedia.org/wiki/Colcannon',
+    kind: 'culinary',
+    supports: 'Colcannon is a traditional Irish dish of mashed potatoes with cabbage, butter and milk; leeks or onions are recognised additions.',
+    accessed: ACCESSED,
+  },
+  'wiki-leek-soup': {
+    id: 'wiki-leek-soup',
+    title: 'Leek soup',
+    publisher: 'Wikipedia',
+    url: 'https://en.wikipedia.org/wiki/Leek_soup',
+    kind: 'culinary',
+    supports: 'Leek soup is leeks simmered in water or stock, often with potatoes, and may be enriched with cream or butter.',
+    accessed: ACCESSED,
+  },
+  'wiki-vichyssoise': {
+    id: 'wiki-vichyssoise',
+    title: 'Vichyssoise',
+    publisher: 'Wikipedia',
+    url: 'https://en.wikipedia.org/wiki/Vichyssoise',
+    kind: 'culinary',
+    supports: 'Vichyssoise is a chilled purée of leeks, potatoes, onions and cream.',
+    accessed: ACCESSED,
+  },
+  'wiki-duxelles': {
+    id: 'wiki-duxelles',
+    title: 'Duxelles',
+    publisher: 'Wikipedia',
+    url: 'https://en.wikipedia.org/wiki/Duxelles',
+    kind: 'culinary',
+    supports: 'Duxelles is minced mushrooms, onions and herbs such as thyme or parsley, sautéed in butter and reduced to a paste.',
+    accessed: ACCESSED,
+  },
+  'wiki-red-cabbage': {
+    id: 'wiki-red-cabbage',
+    title: 'Red cabbage',
+    publisher: 'Wikipedia',
+    url: 'https://en.wikipedia.org/wiki/Red_cabbage',
+    kind: 'culinary',
+    supports: 'Apples and a little vinegar are often added to cooked red cabbage for a sweet-and-sour taste; acid helps it keep its red colour.',
+    accessed: ACCESSED,
+  },
+  'wiki-crumble': {
+    id: 'wiki-crumble',
+    title: 'Crumble',
+    publisher: 'Wikipedia',
+    url: 'https://en.wikipedia.org/wiki/Crumble',
+    kind: 'culinary',
+    supports: 'A crumble or crisp is baked fruit under a flour, sugar and fat topping; apple and rhubarb are popular fillings, and oats or nuts are common additions.',
+    accessed: ACCESSED,
+  },
+  'wiki-shrub': {
+    id: 'wiki-shrub',
+    title: 'Shrub (drink)',
+    publisher: 'Wikipedia',
+    url: 'https://en.wikipedia.org/wiki/Shrub_(drink)',
+    kind: 'culinary',
+    supports: 'A shrub is a vinegared fruit syrup (drinking vinegar) mixed with water, carbonated water or spirits, and may be infused with herbs.',
+    accessed: ACCESSED,
+  },
+  'wiki-gremolata': {
+    id: 'wiki-gremolata',
+    title: 'Gremolata',
+    publisher: 'Wikipedia',
+    url: 'https://en.wikipedia.org/wiki/Gremolata',
+    kind: 'culinary',
+    supports: 'Gremolata is chopped parsley, lemon zest and garlic, the standard accompaniment to ossobuco.',
+    accessed: ACCESSED,
+  },
+  'wiki-nettle-soup': {
+    id: 'wiki-nettle-soup',
+    title: 'Nettle soup',
+    publisher: 'Wikipedia',
+    url: 'https://en.wikipedia.org/wiki/Nettle_soup',
+    kind: 'culinary',
+    supports: 'Nettle soup is made from young stinging nettles and is eaten mainly in spring and early summer.',
+    accessed: ACCESSED,
+  },
+  'wiki-urtica': {
+    id: 'wiki-urtica',
+    title: 'Urtica dioica (stinging nettle)',
+    publisher: 'Wikipedia',
+    url: 'https://en.wikipedia.org/wiki/Urtica_dioica',
+    kind: 'handling',
+    supports: 'Soaking stinging nettles in water or cooking them removes the stinging chemicals.',
+    accessed: ACCESSED,
+  },
+  'splendid-fir-syrup': {
+    id: 'splendid-fir-syrup',
+    title: 'Spruce or Fir Tip Syrup (from Hunter, Angler, Gardener, Cook by Hank Shaw)',
+    publisher: 'The Splendid Table',
+    url: 'https://www.splendidtable.org/recipes/spruce-or-fir-tip-syrup',
+    kind: 'culinary',
+    supports: 'Equal volumes of water, sugar and fir or spruce tips; boil sugar and water, steep the tips off the heat, strain and bottle.',
+    accessed: ACCESSED,
+  },
+  'umn-pickling': {
+    id: 'umn-pickling',
+    title: 'Pickling basics',
+    publisher: 'University of Minnesota Extension',
+    url: 'https://extension.umn.edu/preserve-your-own-food/pickling-basics',
+    kind: 'handling',
+    supports: 'Refrigerator pickles are not processed (canned) and are not shelf-stable.',
+    accessed: ACCESSED,
+  },
+} as const satisfies Record<string, Source>;
+
+export type SourceId = keyof typeof SOURCES;
+
+export function getSource(id: SourceId): Source {
+  return SOURCES[id];
+}
+
+export const INGREDIENT_CATEGORIES = ['Vegetables', 'Fruit', 'Nuts & herbs', 'Specialty & botanicals'] as const;
+export type IngredientCategory = (typeof INGREDIENT_CATEGORIES)[number];
+
+export interface NutritionRecord {
+  fdcId: number;
+  /** The exact USDA record description, so the food state is visible. */
+  description: string;
+  energyKcal: number;
+  proteinG: number;
+  fiberG: number;
+  /** null when the USDA record does not report vitamin C. */
+  vitaminCMg: number | null;
+}
+
+export interface Availability {
+  /** Zero-based months (0 = January). */
+  months: readonly number[];
+  sourceId: SourceId;
+}
 
 export interface Ingredient {
   id: string;
   name: string;
+  category: IngredientCategory;
   color: string;
   image: string;
-  seasons: Season[];
-  region: Region[];
-  originTag: string;
-  nutrientDensity: number; // Illustrative prototype index, expected range 1-10
-  preparations: PrepMethod[];
-  harvestWindow: [number, number]; // 0-11 for Jan-Dec
-  pairings: string[];
-  localPriority: 'High' | 'Medium' | 'Low';
-  sourceLayer: SourceLayer;
-  nutrients: Record<NutrientKey, number>; // Normalized illustrative indices, expected range 0-100
+  /** Sourced Oregon availability, or null when no source has been verified. */
+  availability: Availability | null;
+  /** Sourced USDA nutrition record, or null when no matching record exists. */
+  nutrition: NutritionRecord | null;
+  /** Optional handling or sourcing note shown with the ingredient. */
+  note?: string;
 }
+
+const unsplash = (photoId: string) =>
+  `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=800&q=70`;
+
+const ALL_YEAR = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const;
+const oregon = (months: readonly number[]): Availability => ({ months, sourceId: 'ode-availability' });
 
 export const INGREDIENTS: Ingredient[] = [
   {
-    id: 'chanterelle',
-    name: 'Chanterelle',
-    color: '#e9c46a',
-    image: 'https://images.unsplash.com/photo-1760891961393-e6ab0dc820e8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaGFudGVyZWxsZSUyMG11c2hyb29tJTIwZm9yYWdlfGVufDF8fHx8MTc3NjQ2Njg4Mnww&ixlib=rb-4.1.0&q=80&w=1080',
-    seasons: ['Autumn'],
-    region: ['Cascade Range', 'Olympic Peninsula'],
-    originTag: 'Forest Floor',
-    nutrientDensity: 8,
-    preparations: ['Roasted', 'Simmered', 'Steamed'],
-    harvestWindow: [8, 10], // Sept - Nov
-    pairings: ['Douglas Fir', 'Hazelnut', 'Walla Walla Onion'],
-    localPriority: 'High',
-    sourceLayer: 'Wild Foraged',
-    nutrients: { protein: 45, mineral: 75, fiber: 35, digestibility: 70 },
+    id: 'potato',
+    name: 'Potatoes',
+    category: 'Vegetables',
+    color: '#c8a165',
+    image: unsplash('1518977676601-b53f82aba655'),
+    availability: oregon(ALL_YEAR),
+    nutrition: { fdcId: 170026, description: 'Potatoes, flesh and skin, raw', energyKcal: 77, proteinG: 2.05, fiberG: 2.1, vitaminCMg: 19.7 },
   },
   {
-    id: 'huckleberry',
-    name: 'Huckleberry',
-    color: '#6a0572',
-    image: 'https://images.unsplash.com/photo-1575679483854-4a651f4bc7f3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3aWxkJTIwaHVja2xlYmVycnl8ZW58MXx8fHwxNzc2NDY2ODgyfDA&ixlib=rb-4.1.0&q=80&w=1080',
-    seasons: ['Summer', 'Autumn'],
-    region: ['Cascade Range', 'Olympic Peninsula'],
-    originTag: 'Subalpine Scrub',
-    nutrientDensity: 9,
-    preparations: ['Raw', 'Simmered', 'Fermented'],
-    harvestWindow: [7, 9], // Aug - Oct
-    pairings: ['Douglas Fir', 'Hazelnut', 'Rhubarb'],
-    localPriority: 'High',
-    sourceLayer: 'Wild Foraged',
-    nutrients: { protein: 5, mineral: 50, fiber: 85, digestibility: 95 },
+    id: 'onion',
+    name: 'Onions',
+    category: 'Vegetables',
+    color: '#e0c27a',
+    image: unsplash('1741517480859-cc010cff7e6a'),
+    availability: oregon([0, 1, 2, 3, 7, 8, 9, 10, 11]),
+    nutrition: { fdcId: 170000, description: 'Onions, raw', energyKcal: 40, proteinG: 1.1, fiberG: 1.7, vitaminCMg: 7.4 },
   },
   {
-    id: 'fiddlehead',
-    name: 'Fiddlehead Fern',
-    color: '#2a9d8f',
-    image: 'https://images.unsplash.com/photo-1592018525569-95f358a7cc60?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmaWRkbGVoZWFkJTIwZmVybnxlbnwxfHx8fDE3NzY0NjY4ODJ8MA&ixlib=rb-4.1.0&q=80&w=1080',
-    seasons: ['Spring'],
-    region: ['Puget Sound', 'Olympic Peninsula'],
-    originTag: 'Riparian Zone',
-    nutrientDensity: 7,
-    preparations: ['Steamed', 'Roasted', 'Pickled'],
-    harvestWindow: [3, 4], // April - May
-    pairings: ['Chanterelle', 'Walla Walla Onion', 'Hazelnut'],
-    localPriority: 'High',
-    sourceLayer: 'Wild Foraged',
-    nutrients: { protein: 30, mineral: 85, fiber: 60, digestibility: 65 },
+    id: 'leek',
+    name: 'Leeks',
+    category: 'Vegetables',
+    color: '#8fae6b',
+    image: unsplash('1753445657216-349e0740f941'),
+    availability: null,
+    nutrition: { fdcId: 169246, description: 'Leeks, (bulb and lower leaf-portion), raw', energyKcal: 61, proteinG: 1.5, fiberG: 1.8, vitaminCMg: 12 },
   },
   {
-    id: 'hazelnut',
-    name: 'Filbert Hazelnut',
-    color: '#bc6c25',
-    image: 'https://images.unsplash.com/photo-1715861696705-67ccf052baf5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyYXclMjBoYXplbG51dHN8ZW58MXx8fHwxNzc2NDY2ODg4fDA&ixlib=rb-4.1.0&q=80&w=1080',
-    seasons: ['Autumn'],
-    region: ['Willamette Valley'],
-    originTag: 'Valley Orchard',
-    nutrientDensity: 10,
-    preparations: ['Roasted', 'Ground', 'Raw'],
-    harvestWindow: [8, 10], // Sept - Nov
-    pairings: ['Huckleberry', 'Chanterelle', 'Rhubarb'],
-    localPriority: 'High',
-    sourceLayer: 'Local',
-    nutrients: { protein: 75, mineral: 80, fiber: 70, digestibility: 85 },
+    id: 'garlic',
+    name: 'Garlic',
+    category: 'Vegetables',
+    color: '#d9cbb3',
+    image: unsplash('1685130064064-b77382b0dbe2'),
+    availability: oregon([0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11]),
+    nutrition: { fdcId: 169230, description: 'Garlic, raw', energyKcal: 149, proteinG: 6.36, fiberG: 2.1, vitaminCMg: 31.2 },
   },
   {
-    id: 'walla-walla',
-    name: 'Walla Walla Onion',
-    color: '#f4e285',
-    image: 'https://images.unsplash.com/photo-1741517480859-cc010cff7e6a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzd2VldCUyMG9uaW9uJTIwZmFybXxlbnwxfHx8fDE3NzY0NjY4ODN8MA&ixlib=rb-4.1.0&q=80&w=1080',
-    seasons: ['Summer'],
-    region: ['Willamette Valley'],
-    originTag: 'Volcanic Soil',
-    nutrientDensity: 6,
-    preparations: ['Raw', 'Roasted', 'Pickled'],
-    harvestWindow: [5, 7], // June - Aug
-    pairings: ['Chanterelle', 'Fiddlehead', 'Bull Kelp'],
-    localPriority: 'High',
-    sourceLayer: 'Local',
-    nutrients: { protein: 10, mineral: 40, fiber: 20, digestibility: 90 },
+    id: 'carrot',
+    name: 'Carrots',
+    category: 'Vegetables',
+    color: '#e76f51',
+    image: unsplash('1598170845058-32b9d6a5da37'),
+    availability: oregon([6, 7, 8, 9, 10, 11]),
+    nutrition: { fdcId: 170393, description: 'Carrots, raw', energyKcal: 41, proteinG: 0.93, fiberG: 2.8, vitaminCMg: 5.9 },
+  },
+  {
+    id: 'beet',
+    name: 'Beets',
+    category: 'Vegetables',
+    color: '#8e2c48',
+    image: unsplash('1758151748972-6840ed51058a'),
+    availability: oregon([6, 7]),
+    nutrition: { fdcId: 169145, description: 'Beets, raw', energyKcal: 43, proteinG: 1.61, fiberG: 2.8, vitaminCMg: 4.9 },
+  },
+  {
+    id: 'cabbage',
+    name: 'Cabbage',
+    category: 'Vegetables',
+    color: '#9cbf7f',
+    image: unsplash('1652860213441-6622f9fec77f'),
+    availability: oregon([6, 7, 8, 9]),
+    nutrition: { fdcId: 169975, description: 'Cabbage, raw', energyKcal: 25, proteinG: 1.28, fiberG: 2.5, vitaminCMg: 36.6 },
+    note: 'Green or red. Braised cabbage with apple calls for red cabbage.',
+  },
+  {
+    id: 'kale',
+    name: 'Kale',
+    category: 'Vegetables',
+    color: '#4f7f52',
+    image: unsplash('1524179091875-bf99a9a6af57'),
+    availability: null,
+    nutrition: { fdcId: 168421, description: 'Kale, raw', energyKcal: 35, proteinG: 2.92, fiberG: 4.1, vitaminCMg: 93.4 },
+  },
+  {
+    id: 'mushroom',
+    name: 'Mushrooms',
+    category: 'Vegetables',
+    color: '#a4836a',
+    image: unsplash('1504545102780-26774c1bb073'),
+    availability: oregon(ALL_YEAR),
+    nutrition: { fdcId: 169251, description: 'Mushrooms, white, raw', energyKcal: 22, proteinG: 3.09, fiberG: 1, vitaminCMg: 2.1 },
+    note: 'Cultivated button or cremini mushrooms.',
+  },
+  {
+    id: 'apple',
+    name: 'Apples',
+    category: 'Fruit',
+    color: '#c0392b',
+    image: unsplash('1560806887-1e4cd0b6cbd6'),
+    availability: oregon(ALL_YEAR),
+    nutrition: { fdcId: 171688, description: 'Apples, raw, with skin', energyKcal: 52, proteinG: 0.26, fiberG: 2.4, vitaminCMg: 4.6 },
+  },
+  {
+    id: 'pear',
+    name: 'Pears',
+    category: 'Fruit',
+    color: '#b5a642',
+    image: unsplash('1788512337872-7390113a5318'),
+    availability: oregon(ALL_YEAR),
+    nutrition: { fdcId: 169118, description: 'Pears, raw', energyKcal: 57, proteinG: 0.36, fiberG: 3.1, vitaminCMg: 4.3 },
+  },
+  {
+    id: 'blueberry',
+    name: 'Blueberries',
+    category: 'Fruit',
+    color: '#3d4f8f',
+    image: unsplash('1498557850523-fd3d118b962e'),
+    availability: oregon([6, 7, 8]),
+    nutrition: { fdcId: 171711, description: 'Blueberries, raw', energyKcal: 57, proteinG: 0.74, fiberG: 2.4, vitaminCMg: 9.7 },
+  },
+  {
+    id: 'strawberry',
+    name: 'Strawberries',
+    category: 'Fruit',
+    color: '#d62839',
+    image: unsplash('1587393855524-087f83d95bc9'),
+    availability: oregon([4, 5, 6, 7]),
+    nutrition: { fdcId: 167762, description: 'Strawberries, raw', energyKcal: 32, proteinG: 0.67, fiberG: 2, vitaminCMg: 58.8 },
   },
   {
     id: 'rhubarb',
     name: 'Rhubarb',
-    color: '#d62828',
-    image: 'https://images.unsplash.com/photo-1694402612127-70338cd7e458?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHJodWJhcmJ8ZW58MXx8fHwxNzc2NDY2ODgzfDA&ixlib=rb-4.1.0&q=80&w=1080',
-    seasons: ['Spring', 'Summer'],
-    region: ['Puget Sound', 'Willamette Valley'],
-    originTag: 'Cool Soil',
-    nutrientDensity: 7,
-    preparations: ['Simmered', 'Roasted', 'Fermented'],
-    harvestWindow: [3, 6], // April - July
-    pairings: ['Huckleberry', 'Hazelnut', 'Douglas Fir'],
-    localPriority: 'High',
-    sourceLayer: 'Local',
-    nutrients: { protein: 15, mineral: 60, fiber: 80, digestibility: 75 },
+    category: 'Fruit',
+    color: '#c44569',
+    image: unsplash('1694402612127-70338cd7e458'),
+    availability: oregon([2, 3, 4, 5, 6, 7]),
+    nutrition: { fdcId: 167758, description: 'Rhubarb, raw', energyKcal: 21, proteinG: 0.9, fiberG: 1.8, vitaminCMg: 8 },
+    note: 'Use the stalks only.',
+  },
+  {
+    id: 'hazelnut',
+    name: 'Hazelnuts',
+    category: 'Nuts & herbs',
+    color: '#bc6c25',
+    image: unsplash('1715861696705-67ccf052baf5'),
+    availability: oregon([0, 1, 2, 3, 4, 5, 6, 9, 10, 11]),
+    nutrition: { fdcId: 170581, description: 'Nuts, hazelnuts or filberts', energyKcal: 628, proteinG: 15, fiberG: 9.7, vitaminCMg: 6.3 },
+    note: 'Tree nut.',
+  },
+  {
+    id: 'parsley',
+    name: 'Parsley',
+    category: 'Nuts & herbs',
+    color: '#5a8f3e',
+    image: unsplash('1721117090894-029c81cf0758'),
+    availability: null,
+    nutrition: { fdcId: 170416, description: 'Parsley, fresh', energyKcal: 36, proteinG: 2.97, fiberG: 3.3, vitaminCMg: 133 },
+  },
+  {
+    id: 'thyme',
+    name: 'Thyme',
+    category: 'Nuts & herbs',
+    color: '#7d8f69',
+    image: unsplash('1784095877756-1b0eeb423e9b'),
+    availability: null,
+    nutrition: { fdcId: 173470, description: 'Thyme, fresh', energyKcal: 101, proteinG: 5.56, fiberG: 14, vitaminCMg: 160 },
+  },
+  {
+    id: 'dill',
+    name: 'Dill',
+    category: 'Nuts & herbs',
+    color: '#9aae5b',
+    image: unsplash('1696731212424-29250c946ac6'),
+    availability: null,
+    nutrition: { fdcId: 172233, description: 'Dill weed, fresh', energyKcal: 43, proteinG: 3.46, fiberG: 2.1, vitaminCMg: 85 },
+  },
+  {
+    id: 'nettle',
+    name: 'Stinging Nettle',
+    category: 'Specialty & botanicals',
+    color: '#3f6b3a',
+    image: unsplash('1526127410-01ef03017f7b'),
+    availability: null,
+    nutrition: { fdcId: 169819, description: 'Stinging Nettles, blanched (Northern Plains Indians)', energyKcal: 42, proteinG: 2.71, fiberG: 6.9, vitaminCMg: null },
+    note: 'Handle raw nettles with gloves and cook before eating. Buy from a reputable supplier; Field Kitchen does not identify wild plants.',
   },
   {
     id: 'douglas-fir',
     name: 'Douglas Fir Tips',
+    category: 'Specialty & botanicals',
     color: '#606c38',
-    image: 'https://images.unsplash.com/photo-1636531370203-a6f3d331be57?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkb3VnbGFzJTIwZmlyJTIwYnJhbmNoZXN8ZW58MXx8fHwxNzc2NDY2ODgzfDA&ixlib=rb-4.1.0&q=80&w=1080',
-    seasons: ['Spring'],
-    region: ['Cascade Range', 'Olympic Peninsula'],
-    originTag: 'Canopy Layer',
-    nutrientDensity: 8,
-    preparations: ['Raw', 'Pickled', 'Soaked'],
-    harvestWindow: [3, 4], // April - May
-    pairings: ['Huckleberry', 'Chanterelle', 'Rhubarb'],
-    localPriority: 'Medium',
-    sourceLayer: 'Wild Foraged',
-    nutrients: { protein: 5, mineral: 90, fiber: 30, digestibility: 60 },
+    image: unsplash('1636531370203-a6f3d331be57'),
+    availability: null,
+    nutrition: null,
+    note: 'Culinary use here is limited to infusions such as syrup. Only use tips a reputable supplier has identified as Douglas-fir.',
   },
   {
-    id: 'bull-kelp',
-    name: 'Bull Kelp',
-    color: '#283618',
-    image: 'https://images.unsplash.com/photo-1598296689238-966b19ef4cae?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidWxsJTIwa2VscCUyMHNlYXdlZWR8ZW58MXx8fHwxNzc2NDY2ODgzfDA&ixlib=rb-4.1.0&q=80&w=1080',
-    seasons: ['Summer', 'Autumn'],
-    region: ['Olympic Peninsula', 'Puget Sound'],
-    originTag: 'Coastal Tide',
-    nutrientDensity: 9,
-    preparations: ['Pickled', 'Raw', 'Simmered'],
-    harvestWindow: [5, 9], // June - Oct
-    pairings: ['Walla Walla Onion', 'Fiddlehead', 'Hazelnut'],
-    localPriority: 'High',
-    sourceLayer: 'Wild Foraged',
-    nutrients: { protein: 35, mineral: 95, fiber: 50, digestibility: 85 },
-  }
+    id: 'chanterelle',
+    name: 'Chanterelles',
+    category: 'Specialty & botanicals',
+    color: '#e9a23b',
+    image: unsplash('1760891961393-e6ab0dc820e8'),
+    availability: null,
+    nutrition: { fdcId: 168422, description: 'Mushrooms, Chanterelle, raw', energyKcal: 32, proteinG: 1.49, fiberG: 3.8, vitaminCMg: null },
+    note: 'Wild mushroom. Buy from a reputable supplier; Field Kitchen does not identify wild mushrooms.',
+  },
+  {
+    id: 'huckleberry',
+    name: 'Huckleberries',
+    category: 'Specialty & botanicals',
+    color: '#6a0572',
+    image: unsplash('1575679483854-4a651f4bc7f3'),
+    availability: null,
+    nutrition: null,
+    note: 'Wild berry. Buy from a reputable supplier.',
+  },
 ];
 
-// Pairing labels are presentation-oriented prototype inputs. This explicit map
-// avoids ambiguous substring matching while preserving the current schema.
-const PAIRING_LABEL_TO_INGREDIENT_ID: Readonly<Record<string, string>> = {
-  'Chanterelle': 'chanterelle',
-  'Huckleberry': 'huckleberry',
-  'Fiddlehead': 'fiddlehead',
-  'Hazelnut': 'hazelnut',
-  'Walla Walla Onion': 'walla-walla',
-  'Rhubarb': 'rhubarb',
-  'Douglas Fir': 'douglas-fir',
-  'Bull Kelp': 'bull-kelp',
-};
+export type IngredientId = string;
 
-export function getIngredientByPairingLabel(label: string): Ingredient | undefined {
-  const targetId = PAIRING_LABEL_TO_INGREDIENT_ID[label];
-  return targetId
-    ? INGREDIENTS.find((ingredient) => ingredient.id === targetId)
-    : INGREDIENTS.find((ingredient) => ingredient.name === label);
+const INGREDIENT_INDEX = new Map(INGREDIENTS.map((ingredient) => [ingredient.id, ingredient]));
+
+export function getIngredient(id: IngredientId): Ingredient {
+  const ingredient = INGREDIENT_INDEX.get(id);
+  if (!ingredient) throw new Error(`Unknown ingredient: ${id}`);
+  return ingredient;
 }
 
-export function ingredientListsPairing(source: Ingredient, target: Ingredient): boolean {
-  return source.pairings.some((label) => getIngredientByPairingLabel(label)?.id === target.id);
+export function isAvailableInMonth(ingredient: Ingredient, month: number): boolean {
+  return Boolean(ingredient.availability?.months.includes(month));
 }
 
-export type PairingStrength = 'strong' | 'medium' | 'experimental' | null;
-export type PairingBasis = 'bidirectional' | 'unidirectional' | 'preparation-overlap' | null;
-
-export interface PairingAssessment {
-  strength: PairingStrength;
-  basis: PairingBasis;
-  sharedPreparationCount: number;
+export function fdcUrl(fdcId: number): string {
+  return `https://fdc.nal.usda.gov/food-details/${fdcId}/nutrients`;
 }
-
-export function assessPairing(selected: Ingredient, other: Ingredient): PairingAssessment {
-  if (selected.id === other.id) {
-    return { strength: null, basis: null, sharedPreparationCount: 0 };
-  }
-
-  const selectedListsOther = ingredientListsPairing(selected, other);
-  const otherListsSelected = ingredientListsPairing(other, selected);
-  const sharedPreparationCount = selected.preparations.filter((method) =>
-    other.preparations.includes(method)
-  ).length;
-
-  if (selectedListsOther && otherListsSelected) {
-    return {
-      strength: sharedPreparationCount >= 2 ? 'strong' : 'medium',
-      basis: 'bidirectional',
-      sharedPreparationCount,
-    };
-  }
-
-  if (selectedListsOther || otherListsSelected) {
-    return { strength: 'medium', basis: 'unidirectional', sharedPreparationCount };
-  }
-
-  if (sharedPreparationCount >= 2) {
-    return { strength: 'experimental', basis: 'preparation-overlap', sharedPreparationCount };
-  }
-
-  return { strength: null, basis: null, sharedPreparationCount };
-}
-
-export function getPairingStrength(selected: Ingredient, other: Ingredient): PairingStrength {
-  return assessPairing(selected, other).strength;
-}
-
-function getUniqueUndirectedPairingCount(ingredients: readonly Ingredient[]): number {
-  const uniqueRelationships = new Set<string>();
-
-  for (const ingredient of ingredients) {
-    for (const label of ingredient.pairings) {
-      const target = getIngredientByPairingLabel(label);
-      if (target) {
-        uniqueRelationships.add([ingredient.id, target.id].sort().join('::'));
-      }
-    }
-  }
-
-  return uniqueRelationships.size;
-}
-
-export const ACTIVE_SOURCE_LAYERS = SUPPORTED_SOURCE_LAYERS.filter((layer) =>
-  INGREDIENTS.some((ingredient) => ingredient.sourceLayer === layer)
-);
-
-export const DATASET_SUMMARY = {
-  ingredientCount: INGREDIENTS.length,
-  regionCount: REGIONS.length,
-  preparationMethodCount: PREPARATION_METHODS.length,
-  preparationAssignmentCount: INGREDIENTS.reduce(
-    (total, ingredient) => total + ingredient.preparations.length,
-    0
-  ),
-  directedPairingCount: INGREDIENTS.reduce(
-    (total, ingredient) => total + ingredient.pairings.length,
-    0
-  ),
-  uniqueUndirectedPairingCount: getUniqueUndirectedPairingCount(INGREDIENTS),
-  nutrientAxisCount: NUTRIENT_METRICS.length,
-  seasonalWindowCount: INGREDIENTS.filter((ingredient) => ingredient.harvestWindow.length === 2).length,
-} as const;

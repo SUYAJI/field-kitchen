@@ -1,27 +1,25 @@
 # Field Kitchen
 
-Field Kitchen is an experimental ingredient-intelligence interface for exploring relationships between ingredients, preparation techniques, seasonality, sourcing, and nutritional characteristics.
+Field Kitchen is a proof-of-concept planning tool for small kitchens. Choose the ingredients you have, and it suggests dishes, sides, drinks and preserves you could make. Each idea shows a short method, what else it needs, and where it comes from.
 
 ## Demo
 
 [LIVE DEMO](https://field-kitchen-chi.vercel.app/)
 
-## What it explores
+## How it works
 
-- **Ingredient Library:** Browse the prototype ingredients and inspect their modeled seasonal, regional, preparation, pairing, and nutrient attributes.
-- **Pairing Field:** Explore technique-aware strong, medium, and experimental relationships between ingredients.
-- **Seasonal Map:** Compare modeled harvest windows across a shared annual timeline.
-- **Source Map:** View ingredients through local and wild-foraged sourcing layers and regional habitat context.
-- **Nutrient View:** Compare four illustrative nutrient indices through a metric-driven radial visualization.
-- **Preparation Guide:** Review preparation techniques as cards or as an ingredient-to-technique matrix.
+- **Kitchen:** select ingredients from 18 everyday items and a separate Specialty & botanicals group. Ideas update as you choose. Each one shows whether it is ready to make or what it still needs, with a method, pantry staples, the reasoning behind it, its basis and its sources. **Copy idea** produces a plain-text card.
+- **Ingredients:** a USDA FoodData Central nutrition record and Oregon availability for each ingredient, where a source exists, plus the ideas it appears in.
+- **Seasons:** Oregon availability by month, with the current month marked.
+- **Sources:** the provenance levels, the ranking rules, every source and the known limits.
 
-## Current data status
+## Data status
 
-This release uses a small modeled prototype dataset. Nutritional values are illustrative normalized indices, seasonality reflects the prototype model, and pairing relationships are curated or modeled prototype relationships. The data should not be treated as authoritative nutrition, foraging, agricultural, food-safety, or culinary guidance.
+Information is labelled as a sourced fact, a curated recommendation or a prototype assumption (pantry staples are assumed to be on hand). Nutrition comes from USDA FoodData Central SR Legacy records. Availability comes from an Oregon Department of Education chart (2017). Established preparations cite a culinary reference. Fields without a verified source are left out. Field Kitchen is not a source of complete nutrition, allergen, food-safety or wild-plant identification information, and its ideas are preparation concepts, not tested recipes. See [docs/data-model.md](docs/data-model.md).
 
 ## Development history
 
-Field Kitchen began as a Figma Make prototype and was exported as a React application. It was then developed as a standalone codebase with a smaller dependency set, strict TypeScript tooling, responsive and accessibility fixes, reconciled prototype state, and Vitest and Playwright coverage.
+Field Kitchen began as a Figma Make prototype and was exported as a React application. It was then developed as a standalone codebase with a smaller dependency set, strict TypeScript tooling, responsive and accessibility fixes, and Vitest and Playwright coverage. The first version had six visualisations over an eight-ingredient modelled dataset. The current version replaces them with an ingredient-to-preparation workflow built on sourced data.
 
 ## Stack
 
@@ -59,4 +57,4 @@ npm run test:e2e
 
 ## Future development
 
-Possible future work includes authoritative and sourced nutrition data, region-specific seasonality, a larger ingredient dataset, ingredient-availability or pantry concepts, explicit pairing provenance, and visualizations driven by real data.
+Possible next steps: tested recipes with quantities and yields, per-recipe costing, allergen tagging from a verified source, availability for more regions and herbs, and a larger preparation set.

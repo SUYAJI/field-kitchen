@@ -1,81 +1,43 @@
-# Field Kitchen prototype data model
+# Field Kitchen data model
 
-This note describes the current eight-ingredient prototype model. It documents application behavior; it does not validate the dataset as authoritative agricultural, nutritional, culinary, or foraging information.
+Field Kitchen separates three kinds of information. The level is shown in the interface where the information appears.
 
-## Ingredient shape
+| Level | Meaning | Where it is used |
+| --- | --- | --- |
+| Sourced fact | Supported by a specific reference in `SOURCES` (`src/app/data.ts`) | USDA nutrition records, Oregon availability months, established-preparation references, handling statements |
+| Curated recommendation | A combination or method designed for Field Kitchen | Preparations with `basis.kind: 'curated'`, aromatics added to established dishes, serving suggestions |
+| Prototype assumption | Provisional and unvalidated | Pantry staples (butter, salt, vinegar and so on) are assumed to be on hand. They are always listed on each idea |
 
-Each `Ingredient` currently stores:
+Fields that could not be sourced are `null` and are shown as "Not shown", rather than filled with modelled values.
 
-- identity and presentation: `id`, `name`, `color`, `image`
-- modeled categories: `seasons`, `region`, `sourceLayer`, `localPriority`
-- descriptive context: `originTag`
-- modeled preparation and relationship inputs: `preparations`, `pairings`
-- modeled seasonality: one zero-based `[startMonth, endMonth]` `harvestWindow`
-- illustrative indices: `nutrientDensity` and the four `nutrients` values
+## Ingredients (`src/app/data.ts`)
 
-`harvestWindow` supports ranges that cross the end of the year. Pairings are currently stored as display labels and resolved through an explicit label-to-ingredient mapping.
+The 22 ingredients include 18 everyday items and 4 specialty or botanical items (nettle, Douglas fir tips, chanterelles, huckleberries).
 
-## Current category types
+- `availability`: zero-based months copied from the *Oregon Fruit & Vegetable Availability Chart* (Oregon Harvest for Schools, Oregon Department of Education, updated March 2017, adapted from the Agri-business Council of Oregon). It is `null` for items the chart does not list: leeks, kale, parsley, thyme, dill and all specialty items. The chart does not distinguish fresh harvest from storage.
+- `nutrition`: one USDA FoodData Central SR Legacy record per ingredient, stored with its FDC id and exact description so the food state stays visible. Examples: the nettle record is *blanched*, and the mushroom record is *white*. Vitamin C is `null` when the record does not report it. There is no record for Douglas fir tips or huckleberries. Sage was dropped because only a dried, ground record exists.
+- `note`: handling or sourcing notes. Every specialty item has one.
 
-- Regions: Willamette Valley, Puget Sound, Olympic Peninsula, Cascade Range
-- Seasons: Spring, Summer, Autumn, Winter
-- Supported source layers: Local, Regional, Imported, Wild Foraged
-- Preparation methods: Raw, Roasted, Fermented, Simmered, Steamed, Pickled, Ground, Soaked
-- Local priority: High, Medium, Low
-- Nutrient axes: protein, mineral, fiber, digestibility
+## Preparations (`src/app/preparations.ts`)
 
-The supported taxonomy is broader than the current data. For example, only Local and Wild Foraged source layers are represented by the current eight ingredients.
+There are twelve preparation concepts. Each has:
 
-## Prototype inputs
+- `components`: slots that any one of `options` can fill (substitutions), marked `optional` or required
+- `pantry`: assumed staples, always displayed
+- `method`: a concise outline with no invented quantities. The only ratio shown (fir tip syrup) comes from the cited recipe
+- `basis`: `established` (an existing dish, with at least one source) or `curated` (sources, if any, support only specific handling statements)
+- `safetyNote`: required for specialty and refrigerator preparations
 
-The ingredient records directly store names, imagery, colors, regions, seasons, origin tags, preparation assignments, harvest windows, directed pairing labels, source layers, local priority, nutrient density, and nutrient-axis values. These are prototype inputs without field-level citations.
+## Recommendation logic (`src/app/recommend.ts`)
 
-## Derived values
+`recommend(selectedIds)` is deterministic and has no numeric score:
 
-The application derives:
+1. A preparation appears when at least one selected ingredient fills one of its components.
+2. A preparation is `ready` when every required component is filled. Otherwise it lists the `missing` components.
+3. Results are ordered by fewest missing required components, then most selected ingredients used, then curated list order.
 
-- ingredient, region, preparation-method, nutrient-axis, and seasonal-window counts
-- total ingredient-to-preparation assignments
-- directed pairing-entry count
-- unique undirected pairing count using sorted ingredient IDs
-- source layers represented by the complete or currently filtered dataset
-- filtered ingredient collections for each view
-- nutrient ordering, node size, and radial distance from the active normalized index
+`formatRecommendationForCopy` produces the plain-text card used by **Copy idea**. It includes the concept disclaimer, basis and source URLs.
 
-One ingredient-to-preparation association counts as one preparation assignment. Reciprocal directed pairing entries count as one unique undirected relationship; a one-way entry also counts as one unique relationship.
+## Removed from the first prototype
 
-## Current pairing heuristic
-
-Pairing labels resolve to stable ingredient IDs through the current explicit mapping. For two different ingredients:
-
-1. An explicit relationship in both directions is strong when the ingredients share at least two preparation methods, otherwise medium.
-2. An explicit relationship in only one direction is medium.
-3. No explicit relationship plus at least two shared preparation methods is experimental.
-4. Otherwise, no pairing is shown.
-
-The model deliberately preserves directed entries. Direction currently affects classification but does not yet have provenance or editorial semantics.
-
-## Illustrative numeric semantics
-
-- `nutrientDensity` is an illustrative prototype index expected on a 1–10 range.
-- `nutrients.protein`, `mineral`, `fiber`, and `digestibility` are normalized illustrative indices expected on a 0–100 range.
-- `localPriority` is an editorial category, not a numeric measurement.
-
-These values have no physical units and should not be interpreted as grams, milligrams, percentages of daily value, or authoritative nutrition data.
-
-## Provenance limitations
-
-The current records do not store sources, citations, collection dates, regional variants, confidence, methodology, or factual/editorial distinctions. Habitat descriptions, seasonality, sourcing, nutrition indices, priorities, and pairings should all be revisited before the interface presents real-world guidance.
-
-## Future real-data questions
-
-- Which nutrition fields should come from authoritative sources?
-- Should nutrition store raw values and derive visualization indices?
-- How should region-specific seasonality be represented?
-- Should harvest windows vary by region?
-- Should pairings use ingredient IDs instead of names?
-- Should pairing direction have explicit semantics?
-- Should pairing strength be curated, computed, or both?
-- What provenance/citation metadata belongs on each field?
-- Which fields are factual versus editorial?
-- Should data remain local JSON/TS or move to an external data store later?
+The first prototype's modelled fields had no citations and have been removed: nutrient indices, sub-regions, source layers, local priority, harvest windows and pairing labels. The original implementation remains on `main`.
