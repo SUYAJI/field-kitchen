@@ -231,10 +231,10 @@ export const PREPARATIONS: readonly Preparation[] = [
   },
   {
     id: 'roasted-roots',
-    name: 'Roasted roots with thyme',
+    name: 'Roasted root vegetables',
     category: 'Side',
     technique: 'Roast',
-    summary: 'Potatoes, carrots or beets roasted with garlic and thyme. A dependable side that scales easily.',
+    summary: 'Potatoes, carrots or beets roasted until browned and tender. Add thyme or garlic if you have them.',
     components: [
       { label: 'Potatoes, carrots or beets', options: ['potato', 'carrot', 'beet'] },
       { label: 'Onion', options: ['onion'], optional: true },
@@ -244,9 +244,9 @@ export const PREPARATIONS: readonly Preparation[] = [
     pantry: ['Oil', 'Salt', 'Black pepper'],
     method: [
       'Cut the vegetables into even pieces. Roast beets on a separate tray so their colour does not bleed.',
-      'Toss with oil, salt, thyme and whole garlic cloves.',
+      'Toss with oil, salt and black pepper. Add onion, thyme or whole garlic cloves if available.',
       'Roast in a hot oven, turning once, until browned and tender.',
-      'Finish with gremolata or a splash of vinegar.',
+      'Serve as they are, or finish with gremolata or a splash of vinegar.',
     ],
     why: 'Roasting turns any mix of roots into a dependable side, and the method scales from one tray to a full service.',
     basis: { kind: 'curated', note: 'Curated basic technique. Not based on a cited recipe.', sourceIds: [] },
